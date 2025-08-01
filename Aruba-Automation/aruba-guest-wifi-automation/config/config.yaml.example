@@ -1,0 +1,39 @@
+# Aruba Guest WiFi Automation Configuration
+
+# Aruba Controller Settings
+aruba:
+  controller_ip: 192.168.1.1  # Your Aruba controller IP address
+  username: admin             # API username
+  password: your_password     # API password
+  api_version: v1            # API version (v1 for ArubaOS 8.7+)
+
+# WiFi Network Settings
+wifi:
+  ssids:                     # List of SSID profiles to manage
+    - Guest-WiFi
+    - Corporate-WiFi
+    - Conference-WiFi
+    - IoT-Network
+  password_length: 12        # Length of generated passwords
+  password_options:
+    include_uppercase: true  # Include uppercase letters
+    include_lowercase: true  # Include lowercase letters
+    include_digits: true     # Include numbers
+    include_special: false   # Include special characters (!@#$%^&*)
+    exclude_ambiguous: true  # Exclude ambiguous characters (0O1lI)
+
+# Automation Settings
+automation:
+  password_file: config/passwords.csv    # Path to password file
+  password_file_format: csv              # Format: csv or json
+  save_passwords: true                   # Save generated passwords to file
+  backup_passwords: true                 # Backup passwords before update
+  backup_directory: backups              # Directory for password backups
+
+# Schedule Settings
+schedule:
+  enabled: false            # Enable scheduled password updates
+  frequency: daily          # Options: daily, weekly, monthly
+  time: "02:00"            # Time in 24-hour format (HH:MM)
+  day_of_week: monday      # For weekly schedule (monday-sunday)
+  day_of_month: 1          # For monthly schedule (1-31)

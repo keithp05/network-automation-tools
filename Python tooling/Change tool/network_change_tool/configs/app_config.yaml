@@ -1,0 +1,81 @@
+# Network Change Management Tool Configuration
+
+app_name: "Network Change Management Tool"
+version: "1.0.0"
+
+# Device configurations
+devices:
+  - hostname: "core-switch-01"
+    ip_address: "192.168.1.10"
+    device_type: "cisco_ios"
+    port: 22
+    timeout: 30
+    credentials:
+      username: "admin"
+      password: "cisco123"
+      enable_password: "enable123"
+    tags: ["core", "switch", "production"]
+  
+  - hostname: "fw-01"
+    ip_address: "192.168.1.20"
+    device_type: "paloalto_panos"
+    port: 443
+    timeout: 30
+    credentials:
+      username: "admin"
+      password: "palo123"
+      api_key: "LUFRPT14MW5xOEo1R09KVlBZNnpnemh0VHRBOWl6TGM9bXcwM3JHUGVhRlNiY0dCR0srNERUQT09"
+    tags: ["firewall", "security", "production"]
+  
+  - hostname: "asa-01"
+    ip_address: "192.168.1.30"
+    device_type: "cisco_asa"
+    port: 22
+    timeout: 30
+    credentials:
+      username: "admin"
+      password: "cisco123"
+      enable_password: "enable123"
+    tags: ["firewall", "security", "production"]
+
+# Backup configuration
+backup:
+  enabled: true
+  retention_days: 30
+  backup_before_change: true
+  compress: true
+  encryption_enabled: false
+  backup_path: "./backups"
+
+# Change management configuration
+change:
+  pre_checks_enabled: true
+  post_checks_enabled: true
+  rollback_on_failure: true
+  max_parallel_devices: 5
+  approval_required: false
+  dry_run: false
+
+# Audit configuration
+audit:
+  compliance_checks: true
+  configuration_drift: true
+  security_audit: true
+  report_format: "html"
+  schedule: null  # Can be set to cron expression
+
+# Logging configuration
+logging:
+  level: "INFO"
+  file_logging: true
+  console_logging: true
+  syslog_enabled: false
+  syslog_server: null
+  log_retention_days: 90
+  log_path: "./logs"
+
+# Database configuration (optional)
+database_url: null
+
+# Encryption key for sensitive data
+encryption_key: null

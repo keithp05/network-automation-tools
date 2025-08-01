@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(chmod:*)",
+      "Bash(./package-for-windows.sh:*)",
+      "Bash(ls:*)",
+      "Bash(zip:*)"
+    ],
+    "deny": []
+  }
+}

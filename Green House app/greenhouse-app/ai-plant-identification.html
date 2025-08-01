@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Plant Identification - Greenhouse Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c5530 0%, #4a7c59 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2c5530;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #2c5530;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-area {
+            border: 3px dashed #4CAF50;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            background: #e8f5e8;
+            border-color: #45a049;
+        }
+
+        .upload-area.dragover {
+            background: #e8f5e8;
+            border-color: #45a049;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            color: #2c5530;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .camera-capture {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .camera-btn {
+            padding: 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .camera-btn:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .camera-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .camera-feed-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .camera-feed-item:hover {
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+        }
+
+        .camera-feed-item.selected {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+
+        .camera-feed-item.offline {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .camera-feed-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .camera-feed-name {
+            font-weight: 600;
+            color: #2c5530;
+        }
+
+        .camera-feed-status {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .camera-feed-status.online {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .camera-feed-status.offline {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .camera-feed-info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .camera-feed-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .camera-feed-btn {
+            padding: 8px 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .camera-feed-btn:hover {
+            background: #45a049;
+        }
+
+        .camera-feed-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .camera-feed-btn.secondary {
+            background: #2196F3;
+        }
+
+        .camera-feed-btn.secondary:hover {
+            background: #1976D2;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin: 20px 0;
+        }
+
+        .analysis-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .option-card {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover {
+            border-color: #4CAF50;
+            background: #f8f9fa;
+        }
+
+        .option-card.selected {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+
+        .option-card .icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .option-card .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .option-card .description {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .analyze-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .result-section h3 {
+            color: #2c5530;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .confidence-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f44336, #FF9800, #4CAF50);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .pest-disease-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .pest-disease-item.low {
+            border-left-color: #4CAF50;
+        }
+
+        .pest-disease-item.moderate {
+            border-left-color: #FF9800;
+        }
+
+        .pest-disease-item.high {
+            border-left-color: #f44336;
+        }
+
+        .recommendation-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .recommendation-priority {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-priority.low { background: #4CAF50; }
+        .recommendation-priority.medium { background: #FF9800; }
+        .recommendation-priority.high { background: #f44336; }
+        .recommendation-priority.critical { background: #9C27B0; }
+
+        .provider-results {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .provider-result {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .provider-name {
+            font-weight: bold;
+            color: #2c5530;
+        }
+
+        .provider-confidence {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .history-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .history-plant {
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 5px;
+        }
+
+        .history-confidence {
+            font-size: 12px;
+            color: #4CAF50;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .quick-action {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .quick-action:hover {
+            background: #f0f0f0;
+            border-color: #4CAF50;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .analysis-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .camera-capture {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Plant Identification</h1>
+            <div class="nav-buttons">
+                <a href="./interactive-greenhouse-designer.html" class="nav-btn">🏡 Dashboard</a>
+                <a href="./camera-management.html" class="nav-btn">📹 Cameras</a>
+                <a href="./greenhouse-growth-tracker.html" class="nav-btn">📈 Growth Tracker</a>
+                <a href="./greenhouse-calendar-monitoring.html" class="nav-btn">📅 Calendar</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <!-- Image Upload -->
+                <div class="card">
+                    <h2>📸 Upload Plant Image</h2>
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">Click to upload or drag & drop</div>
+                        <div class="upload-hint">Supports JPG, PNG, WebP (max 10MB)</div>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
+                    
+                    <div class="camera-capture">
+                        <button class="camera-btn" onclick="openCamera()">📹 Use Camera</button>
+                        <button class="camera-btn" onclick="useWebcam()">💻 Use Webcam</button>
+                    </div>
+                    
+                    <div class="camera-feeds-section" style="margin-top: 20px;">
+                        <h3 style="color: #2c5530; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            📡 Greenhouse Cameras
+                        </h3>
+                        <div id="cameraFeedsList">
+                            <div class="loading" id="cameraFeedsLoading" style="display: block;">
+                                <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; margin: 0 auto 10px;"></div>
+                                Loading cameras...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <img id="imagePreview" class="image-preview" style="display: none;">
+                </div>
+
+                <!-- Analysis Options -->
+                <div class="card">
+                    <h2>🔍 Analysis Type</h2>
+                    <div class="analysis-options">
+                        <div class="option-card selected" data-type="quick">
+                            <div class="icon">⚡</div>
+                            <div class="title">Quick ID</div>
+                            <div class="description">Fast plant identification</div>
+                        </div>
+                        <div class="option-card" data-type="health">
+                            <div class="icon">🏥</div>
+                            <div class="title">Health Assessment</div>
+                            <div class="description">Comprehensive health check</div>
+                        </div>
+                        <div class="option-card" data-type="pest">
+                            <div class="icon">🐛</div>
+                            <div class="title">Pest & Disease</div>
+                            <div class="description">Diagnose problems</div>
+                        </div>
+                        <div class="option-card" data-type="growth">
+                            <div class="icon">📏</div>
+                            <div class="title">Growth Analysis</div>
+                            <div class="description">Growth stage & predictions</div>
+                        </div>
+                    </div>
+                    
+                    <button class="analyze-btn" id="analyzeBtn" onclick="analyzeImage()" disabled>
+                        🔍 Analyze with AI
+                    </button>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div class="card loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <div>Analyzing with multiple AI providers...</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 10px;">
+                        Using Google Vision, Gemini, ChatGPT, and PlantNet
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="card results" id="resultsContainer">
+                    <h2>📊 Analysis Results</h2>
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <!-- AI Providers Status -->
+                <div class="card">
+                    <h2>🤖 AI Providers</h2>
+                    <div class="provider-results">
+                        <div class="provider-result">
+                            <div>
+                                <div class="provider-name">Google Vision</div>
+                                <div class="provider-confidence">Object & label detection</div>
+                            </div>
+                            <div style="color: #4CAF50;">●</div>
+                        </div>
+                        <div class="provider-result">
+                            <div>
+                                <div class="provider-name">Google Gemini</div>
+                                <div class="provider-confidence">Plant analysis & advice</div>
+                            </div>
+                            <div style="color: #4CAF50;">●</div>
+                        </div>
+                        <div class="provider-result">
+                            <div>
+                                <div class="provider-name">ChatGPT-4 Vision</div>
+                                <div class="provider-confidence">Expert plant identification</div>
+                            </div>
+                            <div style="color: #4CAF50;">●</div>
+                        </div>
+                        <div class="provider-result">
+                            <div>
+                                <div class="provider-name">PlantNet</div>
+                                <div class="provider-confidence">Species identification</div>
+                            </div>
+                            <div style="color: #4CAF50;">●</div>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <div class="quick-action" onclick="showSampleImages()">
+                            📖 Sample Images
+                        </div>
+                        <div class="quick-action" onclick="showAITips()">
+                            💡 AI Tips
+                        </div>
+                        <div class="quick-action" onclick="exportResults()">
+                            📄 Export Results
+                        </div>
+                        <div class="quick-action" onclick="shareResults()">
+                            🔗 Share Results
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis History -->
+                <div class="card">
+                    <h2>📊 Analysis History</h2>
+                    <div id="analysisHistory">
+                        <div style="text-align: center; color: #666; padding: 20px;">
+                            No previous analyses yet
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card">
+                    <h2>📈 Your Stats</h2>
+                    <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="totalAnalyses">0</div>
+                            <div style="font-size: 12px; color: #666;">Total Analyses</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #2196F3;" id="plantsIdentified">0</div>
+                            <div style="font-size: 12px; color: #666;">Plants Identified</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #FF9800;" id="issuesFound">0</div>
+                            <div style="font-size: 12px; color: #666;">Issues Detected</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="font-size: 24px; font-weight: bold; color: #9C27B0;" id="avgConfidence">0%</div>
+                            <div style="font-size: 12px; color: #666;">Avg Confidence</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+        let currentImage = null;
+        let selectedAnalysisType = 'quick';
+
+        // Image upload handling
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            if (file) {
+                displayImage(file);
+            }
+        }
+
+        function displayImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                
+                currentImage = {
+                    file: file,
+                    dataUrl: e.target.result,
+                    base64: e.target.result.split(',')[1]
+                };
+                
+                document.getElementById('analyzeBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Drag and drop handling
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                displayImage(files[0]);
+            }
+        });
+
+        // Analysis type selection
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedAnalysisType = this.dataset.type;
+            });
+        });
+
+        // Camera functions
+        function openCamera() {
+            // In a real app, this would open the device camera
+            alert('Camera integration would open device camera for photo capture');
+        }
+
+        function useWebcam() {
+            // In a real app, this would open webcam stream
+            alert('Webcam integration would stream from computer camera');
+        }
+
+        // Main analysis function
+        async function analyzeImage() {
+            if (!currentImage) {
+                alert('Please select an image first');
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('Please log in to use AI identification');
+                window.location.href = './greenhouse-auth.html';
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loadingIndicator').classList.add('show');
+            document.getElementById('resultsContainer').classList.remove('show');
+            document.getElementById('analyzeBtn').disabled = true;
+
+            try {
+                let endpoint = '/ai-identification/analyze';
+                let requestBody = {
+                    imageBase64: currentImage.base64,
+                    providers: ['google_vision', 'google_gemini', 'openai_gpt4_vision', 'plantnet'],
+                    options: {
+                        detailLevel: 'detailed',
+                        includeConfidence: true,
+                        includeTreatment: true
+                    }
+                };
+
+                // Adjust endpoint and request based on analysis type
+                switch (selectedAnalysisType) {
+                    case 'quick':
+                        endpoint = '/ai-identification/identify/quick';
+                        break;
+                    case 'health':
+                        endpoint = '/ai-identification/assess/health';
+                        requestBody.context = {
+                            cropType: 'unknown',
+                            plantAge: null
+                        };
+                        break;
+                    case 'pest':
+                        endpoint = '/ai-identification/diagnose/pest-disease';
+                        break;
+                    case 'growth':
+                        endpoint = '/ai-identification/analyze/growth';
+                        break;
+                }
+
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayResults(result, selectedAnalysisType);
+                    addToHistory(result);
+                    updateStats();
+                } else {
+                    alert(result.message || 'Analysis failed');
+                }
+            } catch (error) {
+                console.error('Analysis error:', error);
+                alert('Failed to analyze image. Please try again.');
+            } finally {
+                // Hide loading
+                document.getElementById('loadingIndicator').classList.remove('show');
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        }
+
+        // Display analysis results
+        function displayResults(result, analysisType) {
+            const container = document.getElementById('resultsContent');
+            let html = '';
+
+            if (analysisType === 'quick' && result.identification) {
+                html = generateQuickResults(result.identification);
+            } else if (result.analysis) {
+                html = generateFullResults(result.analysis);
+            } else if (result.healthAssessment) {
+                html = generateHealthResults(result.healthAssessment);
+            } else if (result.diagnosis) {
+                html = generateDiagnosisResults(result.diagnosis);
+            } else if (result.growthAnalysis) {
+                html = generateGrowthResults(result.growthAnalysis);
+            }
+
+            container.innerHTML = html;
+            document.getElementById('resultsContainer').classList.add('show');
+        }
+
+        function generateQuickResults(identification) {
+            if (!identification.plantIdentification) {
+                return '<div style="text-align: center; color: #666;">No plant identification found</div>';
+            }
+
+            const plant = identification.plantIdentification;
+            return `
+                <div class="result-section">
+                    <h3>🌱 Plant Identification</h3>
+                    <div style="font-size: 18px; font-weight: bold; color: #2c5530; margin-bottom: 10px;">
+                        ${plant.commonName || plant.species}
+                    </div>
+                    ${plant.scientificName ? `<div style="font-style: italic; color: #666; margin-bottom: 10px;">${plant.scientificName}</div>` : ''}
+                    <div>Confidence Level:</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${identification.confidence * 100}%">
+                            ${Math.round(identification.confidence * 100)}%
+                        </div>
+                    </div>
+                    ${identification.alternatives ? `
+                        <div style="margin-top: 15px;">
+                            <strong>Alternative matches:</strong>
+                            ${identification.alternatives.map(alt => `
+                                <div style="margin: 5px 0; padding: 8px; background: #f0f0f0; border-radius: 4px;">
+                                    ${alt.commonName} (${Math.round(alt.confidence * 100)}%)
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function generateFullResults(analysis) {
+            let html = '';
+
+            // Plant identification
+            if (analysis.consensus.plantIdentification) {
+                html += generateQuickResults({
+                    plantIdentification: analysis.consensus.plantIdentification,
+                    confidence: analysis.confidence
+                });
+            }
+
+            // Health assessment
+            if (analysis.consensus.healthAssessment) {
+                html += `
+                    <div class="result-section">
+                        <h3>🏥 Health Assessment</h3>
+                        <div>Overall Health Score:</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${analysis.consensus.healthAssessment.overallHealth}%">
+                                ${analysis.consensus.healthAssessment.overallHealth}%
+                            </div>
+                        </div>
+                        ${analysis.consensus.healthAssessment.stressFactors.length > 0 ? `
+                            <div style="margin-top: 15px;">
+                                <strong>Stress Factors:</strong>
+                                ${analysis.consensus.healthAssessment.stressFactors.map(factor => `
+                                    <div class="pest-disease-item ${factor.severity}">
+                                        <strong>${factor.type}</strong> - ${factor.severity}
+                                        <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                                            ${factor.indicators.join(', ')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            // Pests
+            if (analysis.consensus.pestDetection && analysis.consensus.pestDetection.length > 0) {
+                html += `
+                    <div class="result-section">
+                        <h3>🐛 Pest Detection</h3>
+                        ${analysis.consensus.pestDetection.map(pest => `
+                            <div class="pest-disease-item ${pest.severity}">
+                                <strong>${pest.commonName}</strong> - ${pest.severity} severity
+                                <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                                    Confidence: ${Math.round(pest.confidence * 100)}%
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Diseases
+            if (analysis.consensus.diseaseDetection && analysis.consensus.diseaseDetection.length > 0) {
+                html += `
+                    <div class="result-section">
+                        <h3>🦠 Disease Detection</h3>
+                        ${analysis.consensus.diseaseDetection.map(disease => `
+                            <div class="pest-disease-item ${disease.severity}">
+                                <strong>${disease.commonName}</strong> (${disease.pathogen})
+                                <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                                    Confidence: ${Math.round(disease.confidence * 100)}% | Severity: ${disease.severity}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Recommendations
+            if (analysis.recommendations && analysis.recommendations.length > 0) {
+                html += `
+                    <div class="result-section">
+                        <h3>💡 Recommendations</h3>
+                        ${analysis.recommendations.map(rec => `
+                            <div class="recommendation-item">
+                                <div class="recommendation-priority ${rec.priority}">${rec.priority.toUpperCase()}</div>
+                                <strong>${rec.title}</strong>
+                                <div style="margin: 8px 0; color: #555;">${rec.description}</div>
+                                <div style="font-size: 14px; color: #666;">
+                                    <strong>Action:</strong> ${rec.action}
+                                </div>
+                                <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                    Timeline: ${rec.timeline}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Provider results
+            if (analysis.results && analysis.results.length > 0) {
+                html += `
+                    <div class="result-section">
+                        <h3>🤖 AI Provider Results</h3>
+                        <div class="provider-results">
+                            ${analysis.results.map(result => `
+                                <div class="provider-result">
+                                    <div>
+                                        <div class="provider-name">${result.provider.replace('_', ' ')}</div>
+                                        <div class="provider-confidence">${result.processingTime}ms</div>
+                                    </div>
+                                    <div style="color: #4CAF50;">${Math.round(result.confidence * 100)}%</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html || '<div style="text-align: center; color: #666;">No results available</div>';
+        }
+
+        function generateHealthResults(healthAssessment) {
+            return generateFullResults({ consensus: healthAssessment, recommendations: healthAssessment.recommendations || [] });
+        }
+
+        function generateDiagnosisResults(diagnosis) {
+            let html = '';
+            
+            if (diagnosis.pests.length > 0 || diagnosis.diseases.length > 0) {
+                html += `
+                    <div class="result-section">
+                        <h3>🔍 Diagnosis Results</h3>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Urgency Level:</strong> 
+                            <span style="color: ${diagnosis.urgency === 'critical' ? '#f44336' : diagnosis.urgency === 'high' ? '#FF9800' : '#4CAF50'};">
+                                ${diagnosis.urgency.toUpperCase()}
+                            </span>
+                        </div>
+                `;
+                
+                if (diagnosis.pests.length > 0) {
+                    html += `
+                        <h4>🐛 Pests Found:</h4>
+                        ${diagnosis.pests.map(pest => `
+                            <div class="pest-disease-item ${pest.severity}">
+                                <strong>${pest.commonName}</strong>
+                                <div style="font-size: 14px; margin-top: 5px;">
+                                    Severity: ${pest.severity} | Confidence: ${Math.round(pest.confidence * 100)}%
+                                </div>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+                
+                if (diagnosis.diseases.length > 0) {
+                    html += `
+                        <h4>🦠 Diseases Found:</h4>
+                        ${diagnosis.diseases.map(disease => `
+                            <div class="pest-disease-item ${disease.severity}">
+                                <strong>${disease.commonName}</strong>
+                                <div style="font-size: 14px; margin-top: 5px;">
+                                    Type: ${disease.pathogen} | Severity: ${disease.severity}
+                                </div>
+                            </div>
+                        `).join('')}
+                    `;
+                }
+                
+                html += '</div>';
+            }
+            
+            if (diagnosis.treatmentPlans && diagnosis.treatmentPlans.length > 0) {
+                html += `
+                    <div class="result-section">
+                        <h3>💊 Treatment Plans</h3>
+                        ${diagnosis.treatmentPlans.map(treatment => `
+                            <div class="recommendation-item">
+                                <div class="recommendation-priority ${treatment.priority}">${treatment.priority.toUpperCase()}</div>
+                                <strong>${treatment.title}</strong>
+                                <div style="margin: 8px 0;">${treatment.description}</div>
+                                <div style="font-size: 14px; color: #666;">
+                                    <strong>Action:</strong> ${treatment.action}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            return html || '<div style="text-align: center; color: #666;">No issues detected</div>';
+        }
+
+        function generateGrowthResults(growthAnalysis) {
+            return `
+                <div class="result-section">
+                    <h3>📏 Growth Analysis</h3>
+                    ${growthAnalysis.currentStage ? `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Current Stage:</strong> ${growthAnalysis.currentStage}
+                        </div>
+                    ` : ''}
+                    ${growthAnalysis.developmentRate ? `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Development Rate:</strong> ${growthAnalysis.developmentRate}
+                        </div>
+                    ` : ''}
+                    ${growthAnalysis.harvestPrediction ? `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Harvest Prediction:</strong> ${growthAnalysis.harvestPrediction.estimatedDays} days
+                            <div style="font-size: 14px; color: #666;">Status: ${growthAnalysis.harvestPrediction.status}</div>
+                        </div>
+                    ` : ''}
+                    <div>Analysis Confidence:</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${growthAnalysis.confidence * 100}%">
+                            ${Math.round(growthAnalysis.confidence * 100)}%
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // History and stats functions
+        function addToHistory(result) {
+            // Add to local storage history
+            let history = JSON.parse(localStorage.getItem('aiAnalysisHistory') || '[]');
+            
+            const historyItem = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                type: selectedAnalysisType,
+                plant: result.identification?.plantIdentification?.commonName || 
+                       result.analysis?.consensus?.plantIdentification?.commonName || 
+                       'Unknown',
+                confidence: result.identification?.confidence || result.analysis?.confidence || 0,
+                image: currentImage.dataUrl
+            };
+            
+            history.unshift(historyItem);
+            history = history.slice(0, 10); // Keep only last 10
+            localStorage.setItem('aiAnalysisHistory', JSON.stringify(history));
+            
+            displayHistory();
+        }
+
+        function displayHistory() {
+            const history = JSON.parse(localStorage.getItem('aiAnalysisHistory') || '[]');
+            const container = document.getElementById('analysisHistory');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No previous analyses yet</div>';
+                return;
+            }
+            
+            container.innerHTML = history.map(item => `
+                <div class="history-item" onclick="viewHistoryItem('${item.id}')">
+                    <div class="history-date">${new Date(item.timestamp).toLocaleDateString()}</div>
+                    <div class="history-plant">${item.plant}</div>
+                    <div class="history-confidence">Confidence: ${Math.round(item.confidence * 100)}%</div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const history = JSON.parse(localStorage.getItem('aiAnalysisHistory') || '[]');
+            
+            document.getElementById('totalAnalyses').textContent = history.length;
+            document.getElementById('plantsIdentified').textContent = 
+                new Set(history.map(h => h.plant).filter(p => p !== 'Unknown')).size;
+            document.getElementById('issuesFound').textContent = 
+                history.filter(h => h.type === 'pest' || h.type === 'health').length;
+            
+            const avgConfidence = history.length > 0 
+                ? Math.round(history.reduce((sum, h) => sum + h.confidence, 0) / history.length * 100)
+                : 0;
+            document.getElementById('avgConfidence').textContent = avgConfidence + '%';
+        }
+
+        // Utility functions
+        function viewHistoryItem(id) {
+            const history = JSON.parse(localStorage.getItem('aiAnalysisHistory') || '[]');
+            const item = history.find(h => h.id == id);
+            if (item) {
+                alert(`Analysis from ${new Date(item.timestamp).toLocaleString()}\nPlant: ${item.plant}\nConfidence: ${Math.round(item.confidence * 100)}%`);
+            }
+        }
+
+        function showSampleImages() {
+            alert('Sample images feature would show example plant photos for testing AI identification');
+        }
+
+        function showAITips() {
+            alert('AI Tips:\n\n1. Use clear, well-lit photos\n2. Include the entire plant when possible\n3. Focus on problem areas for pest/disease detection\n4. Take photos from multiple angles\n5. Avoid blurry or dark images');
+        }
+
+        function exportResults() {
+            alert('Export functionality would save results as PDF or CSV');
+        }
+
+        function shareResults() {
+            alert('Share functionality would generate shareable links or social media posts');
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = './greenhouse-auth.html';
+                return;
+            }
+
+            displayHistory();
+            updateStats();
+            loadCameraFeeds();
+        });
+
+        // Camera integration variables
+        let availableCameras = [];
+        let selectedCamera = null;
+
+        // Camera feeds functionality
+        async function loadCameraFeeds() {
+            const token = localStorage.getItem('authToken');
+            const cameraFeedsList = document.getElementById('cameraFeedsList');
+            const loadingIndicator = document.getElementById('cameraFeedsLoading');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/cameras`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                loadingIndicator.style.display = 'none';
+
+                if (data.success && data.cameras && data.cameras.length > 0) {
+                    availableCameras = data.cameras;
+                    renderCameraFeeds(data.cameras);
+                } else {
+                    cameraFeedsList.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #666;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">📹</div>
+                            <div>No cameras available</div>
+                            <div style="font-size: 14px; margin-top: 5px;">
+                                <a href="/cameras" style="color: #4CAF50;">Add cameras</a> to capture images for analysis
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading camera feeds:', error);
+                loadingIndicator.style.display = 'none';
+                cameraFeedsList.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #f44336;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">⚠️</div>
+                        <div>Failed to load cameras</div>
+                        <button onclick="loadCameraFeeds()" style="margin-top: 10px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                            Retry
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCameraFeeds(cameras) {
+            const cameraFeedsList = document.getElementById('cameraFeedsList');
+            
+            cameraFeedsList.innerHTML = cameras.map(camera => `
+                <div class="camera-feed-item ${camera.status.isOnline ? '' : 'offline'} ${selectedCamera?.id === camera.id ? 'selected' : ''}" 
+                     onclick="selectCamera('${camera.id}')">
+                    <div class="camera-feed-header">
+                        <div class="camera-feed-name">${camera.name}</div>
+                        <div class="camera-feed-status ${camera.status.isOnline ? 'online' : 'offline'}">
+                            ${camera.status.isOnline ? '🟢 Online' : '🔴 Offline'}
+                        </div>
+                    </div>
+                    <div class="camera-feed-info">
+                        ${camera.description || 'No description'}
+                    </div>
+                    <div class="camera-feed-actions">
+                        <button class="camera-feed-btn" onclick="captureFromCamera('${camera.id}'); event.stopPropagation();" 
+                                ${!camera.status.isOnline ? 'disabled' : ''}>
+                            📸 Capture & Analyze
+                        </button>
+                        <button class="camera-feed-btn secondary" onclick="viewCameraStream('${camera.id}'); event.stopPropagation();" 
+                                ${!camera.status.isOnline ? 'disabled' : ''}>
+                            🎥 View Stream
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectCamera(cameraId) {
+            const camera = availableCameras.find(c => c.id === cameraId);
+            if (camera && camera.status.isOnline) {
+                selectedCamera = camera;
+                renderCameraFeeds(availableCameras);
+            }
+        }
+
+        async function captureFromCamera(cameraId) {
+            const token = localStorage.getItem('authToken');
+            const camera = availableCameras.find(c => c.id === cameraId);
+            
+            if (!camera) {
+                showAlert('Camera not found', 'error');
+                return;
+            }
+
+            if (!camera.status.isOnline) {
+                showAlert('Camera is offline', 'error');
+                return;
+            }
+
+            try {
+                showLoadingIndicator('Capturing image from camera...');
+
+                // Capture and analyze in one request
+                const response = await fetch(`${API_BASE_URL}/cameras/${cameraId}/capture-analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        analysisType: selectedAnalysisType,
+                        captureOptions: {
+                            format: 'jpeg',
+                            quality: 90,
+                            timestamp: true
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                hideLoadingIndicator();
+
+                if (data.success) {
+                    // Display the captured image
+                    const imagePreview = document.getElementById('imagePreview');
+                    imagePreview.src = data.capture.imageUrl;
+                    imagePreview.style.display = 'block';
+                    currentImage = data.capture.imageBase64;
+
+                    // Enable analyze button
+                    document.getElementById('analyzeBtn').disabled = false;
+
+                    // If analysis was included, display results
+                    if (data.analysis) {
+                        displayAnalysisResults(data.analysis);
+                    }
+
+                    showAlert(`Image captured from ${camera.name}!`, 'success');
+                } else {
+                    showAlert('Failed to capture image: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error capturing from camera:', error);
+                hideLoadingIndicator();
+                showAlert('Failed to capture image from camera', 'error');
+            }
+        }
+
+        function viewCameraStream(cameraId) {
+            const camera = availableCameras.find(c => c.id === cameraId);
+            
+            if (!camera) {
+                showAlert('Camera not found', 'error');
+                return;
+            }
+
+            if (!camera.status.isOnline) {
+                showAlert('Camera is offline', 'error');
+                return;
+            }
+
+            // In a real implementation, this would open a stream viewer
+            showAlert(`Stream viewer for ${camera.name} not yet implemented`, 'warning');
+        }
+
+        function showLoadingIndicator(message) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const messageElement = loadingIndicator.querySelector('div:last-child');
+            if (messageElement) {
+                messageElement.textContent = message;
+            }
+            loadingIndicator.classList.add('show');
+        }
+
+        function hideLoadingIndicator() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.classList.remove('show');
+        }
+
+        function showAlert(message, type = 'info') {
+            // Create alert element
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                max-width: 400px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                animation: slideInRight 0.3s ease;
+            `;
+
+            // Set background color based on type
+            const colors = {
+                success: '#4CAF50',
+                error: '#f44336',
+                warning: '#ff9800',
+                info: '#2196F3'
+            };
+            alert.style.background = colors[type] || colors.info;
+            alert.textContent = message;
+
+            // Add to page
+            document.body.appendChild(alert);
+
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(echo $SHELL)",
+      "Bash(test:*)",
+      "Bash(source:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm init:*)",
+      "Bash(npx create-react-app:*)",
+      "Bash(claude --version)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(cat:*)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(sudo chown:*)",
+      "Bash(open:*)",
+      "Bash(chmod:*)",
+      "Bash(./start-greenhouse-app.sh:*)",
+      "Bash(touch:*)",
+      "Bash(kill:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(true)"
+    ],
+    "deny": []
+  }
+}

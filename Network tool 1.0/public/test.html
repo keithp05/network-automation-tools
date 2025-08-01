@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Navigation Test</title>
+    <style>
+        .content-section { display: none; padding: 20px; }
+        .content-section.active { display: block; }
+        .nav-link { padding: 10px; margin: 5px; background: #007bff; color: white; text-decoration: none; display: inline-block; }
+        .nav-link.active { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Navigation Test</h1>
+    
+    <nav>
+        <a href="#dashboard" class="nav-link active">Dashboard</a>
+        <a href="#python-scripts" class="nav-link">Python Scripts</a>
+        <a href="#universal-search" class="nav-link">Universal Search</a>
+    </nav>
+    
+    <div id="dashboard" class="content-section active">
+        <h2>Dashboard Section</h2>
+        <p>This is the dashboard content.</p>
+    </div>
+    
+    <div id="python-scripts" class="content-section">
+        <h2>Python Scripts Section</h2>
+        <p>This is the Python Scripts content.</p>
+        <button onclick="alert('Button works!')">Test Button</button>
+    </div>
+    
+    <div id="universal-search" class="content-section">
+        <h2>Universal Search Section</h2>
+        <p>This is the Universal Search content.</p>
+    </div>
+
+    <script>
+        console.log('Test page loaded');
+        
+        // Simple navigation handler
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded');
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            
+            console.log('Found nav links:', navLinks.length);
+            console.log('Found sections:', sections.length);
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const sectionId = link.getAttribute('href').substring(1);
+                    console.log('Switching to:', sectionId);
+                    
+                    // Update navigation
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    // Update sections
+                    sections.forEach(section => {
+                        if (section.id === sectionId) {
+                            section.classList.add('active');
+                            console.log('Activated section:', section.id);
+                        } else {
+                            section.classList.remove('active');
+                        }
+                    });
+                });
+            });
+            
+            // Test function
+            window.testSwitch = function(sectionId) {
+                console.log('Manual test switch to:', sectionId);
+                const link = document.querySelector(`[href="#${sectionId}"]`);
+                if (link) {
+                    link.click();
+                } else {
+                    console.error('Link not found for section:', sectionId);
+                }
+            };
+        });
+    </script>
+</body>
+</html>

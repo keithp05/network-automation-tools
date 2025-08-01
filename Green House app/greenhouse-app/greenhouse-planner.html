@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greenhouse Planning System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+        
+        .wizard {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .wizard-step {
+            flex: 1;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .wizard-step.active {
+            background: white;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .wizard-step.completed {
+            color: #27ae60;
+        }
+        
+        .wizard-step.completed::after {
+            content: '✓';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #27ae60;
+        }
+        
+        .wizard-content {
+            padding: 2rem;
+            min-height: 400px;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .greenhouse-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .greenhouse-card {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .greenhouse-card:hover {
+            border-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+        }
+        
+        .greenhouse-card.selected {
+            border-color: #27ae60;
+            background: #e8f5e9;
+        }
+        
+        .greenhouse-card h3 {
+            color: #27ae60;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #27ae60;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .crop-suggestions {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #e8f5e9;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .companion-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .companion-chip {
+            background: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid #27ae60;
+            color: #27ae60;
+        }
+        
+        .grow-bed-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .grow-bed-card {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .grow-bed-card:hover {
+            border-color: #27ae60;
+        }
+        
+        .grow-bed-card.selected {
+            border-color: #27ae60;
+            background: #e8f5e9;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        button {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #229954;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .summary {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .summary h3 {
+            color: #27ae60;
+            margin-bottom: 1rem;
+        }
+        
+        .summary-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .summary-section:last-child {
+            border-bottom: none;
+        }
+        
+        .materials-list {
+            margin-top: 1rem;
+        }
+        
+        .material-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 1rem;
+            padding: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .material-item:first-child {
+            font-weight: bold;
+            background: #e9ecef;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .cost-summary {
+            background: #27ae60;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27ae60;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌱 Greenhouse Planning System</h1>
+        <p>Design your perfect greenhouse with AI-powered recommendations</p>
+    </div>
+    
+    <div class="container">
+        <div class="wizard">
+            <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1">
+                    1. Greenhouse Type
+                </div>
+                <div class="wizard-step" data-step="2">
+                    2. Dimensions & Location
+                </div>
+                <div class="wizard-step" data-step="3">
+                    3. Crop Selection
+                </div>
+                <div class="wizard-step" data-step="4">
+                    4. Grow Beds
+                </div>
+                <div class="wizard-step" data-step="5">
+                    5. Features & Summary
+                </div>
+            </div>
+            
+            <div class="wizard-content">
+                <!-- Step 1: Greenhouse Type -->
+                <div class="step-content active" id="step1">
+                    <h2>Select Your Greenhouse Type</h2>
+                    <div class="greenhouse-types" id="greenhouseTypes">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Step 2: Dimensions & Location -->
+                <div class="step-content" id="step2">
+                    <h2>Greenhouse Dimensions & Location</h2>
+                    <form id="dimensionsForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Length (feet)</label>
+                                <input type="number" id="length" min="10" max="200" value="30" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Width (feet)</label>
+                                <input type="number" id="width" min="10" max="50" value="20" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Height (feet)</label>
+                                <input type="number" id="height" min="8" max="20" value="12" required>
+                            </div>
+                        </div>
+                        
+                        <h3 style="margin-top: 2rem;">Location</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Latitude</label>
+                                <input type="number" id="latitude" step="0.0001" value="40.7128" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Longitude</label>
+                                <input type="number" id="longitude" step="0.0001" value="-74.0060" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Climate Zone</label>
+                                <select id="climateZone" required>
+                                    <option value="3a">3a (-40 to -35°F)</option>
+                                    <option value="3b">3b (-35 to -30°F)</option>
+                                    <option value="4a">4a (-30 to -25°F)</option>
+                                    <option value="4b">4b (-25 to -20°F)</option>
+                                    <option value="5a">5a (-20 to -15°F)</option>
+                                    <option value="5b">5b (-15 to -10°F)</option>
+                                    <option value="6a">6a (-10 to -5°F)</option>
+                                    <option value="6b" selected>6b (-5 to 0°F)</option>
+                                    <option value="7a">7a (0 to 5°F)</option>
+                                    <option value="7b">7b (5 to 10°F)</option>
+                                    <option value="8a">8a (10 to 15°F)</option>
+                                    <option value="8b">8b (15 to 20°F)</option>
+                                    <option value="9a">9a (20 to 25°F)</option>
+                                    <option value="9b">9b (25 to 30°F)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Step 3: Crop Selection -->
+                <div class="step-content" id="step3">
+                    <h2>Select Your Primary Crop</h2>
+                    <div class="form-group">
+                        <label>Primary Crop</label>
+                        <input type="text" id="primaryCrop" placeholder="e.g., Tomatoes, Lettuce, Peppers" list="cropList">
+                        <datalist id="cropList">
+                            <option value="Tomatoes">
+                            <option value="Lettuce">
+                            <option value="Peppers">
+                            <option value="Cucumbers">
+                            <option value="Basil">
+                            <option value="Spinach">
+                            <option value="Kale">
+                            <option value="Strawberries">
+                            <option value="Herbs">
+                            <option value="Beans">
+                            <option value="Carrots">
+                            <option value="Radishes">
+                        </datalist>
+                    </div>
+                    
+                    <button type="button" class="btn-primary" onclick="getCompanionCrops()">
+                        Get Companion Plants
+                    </button>
+                    
+                    <div class="crop-suggestions" id="cropSuggestions">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Step 4: Grow Beds -->
+                <div class="step-content" id="step4">
+                    <h2>Select Your Growing System</h2>
+                    <div class="grow-bed-options" id="growBedOptions">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    
+                    <div id="bedRecommendation" style="margin-top: 2rem;">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Step 5: Features & Summary -->
+                <div class="step-content" id="step5">
+                    <h2>Additional Features & Summary</h2>
+                    <div class="form-group">
+                        <h3>Select Additional Features:</h3>
+                        <label style="display: block; margin: 0.5rem 0;">
+                            <input type="checkbox" id="hasClimateBattery" style="width: auto; margin-right: 0.5rem;">
+                            Climate Battery (Geothermal System)
+                        </label>
+                        <label style="display: block; margin: 0.5rem 0;">
+                            <input type="checkbox" id="hasAutomation" style="width: auto; margin-right: 0.5rem;">
+                            Automation System
+                        </label>
+                        <label style="display: block; margin: 0.5rem 0;">
+                            <input type="checkbox" id="hasAquaponics" style="width: auto; margin-right: 0.5rem;">
+                            Aquaponics Integration
+                        </label>
+                    </div>
+                    
+                    <div class="summary" id="planSummary">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-secondary" onclick="previousStep()" id="prevBtn" style="display: none;">
+                    Previous
+                </button>
+                <button class="btn-primary" onclick="nextStep()" id="nextBtn">
+                    Next
+                </button>
+                <button class="btn-primary" onclick="generatePlan()" id="generateBtn" style="display: none;">
+                    Generate Complete Plan
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        let greenhousePlan = {
+            type: null,
+            dimensions: {},
+            location: {},
+            crops: {},
+            growBeds: [],
+            features: {}
+        };
+        
+        // Greenhouse types data
+        const greenhouseTypes = [
+            {
+                type: 'hoop_house',
+                name: 'Hoop House',
+                description: 'Simple arched structure, perfect for beginners',
+                advantages: ['Low cost', 'Easy setup', 'Good for season extension']
+            },
+            {
+                type: 'geodesic_dome',
+                name: 'Geodesic Dome',
+                description: 'Spherical design with excellent strength',
+                advantages: ['Wind resistant', 'Energy efficient', 'Even light distribution']
+            },
+            {
+                type: 'traditional_gable',
+                name: 'Traditional Gable',
+                description: 'Classic peaked roof design',
+                advantages: ['Maximum headroom', 'Easy equipment installation', 'Professional appearance']
+            },
+            {
+                type: 'quonset',
+                name: 'Quonset Hut',
+                description: 'Semi-circular arch, commercial grade',
+                advantages: ['Strong structure', 'Good for large operations', 'Efficient material use']
+            },
+            {
+                type: 'gothic_arch',
+                name: 'Gothic Arch',
+                description: 'Pointed arch for snow country',
+                advantages: ['Excellent snow shedding', 'More headroom', 'Year-round growing']
+            },
+            {
+                type: 'lean_to',
+                name: 'Lean-To',
+                description: 'Attached to existing building',
+                advantages: ['Lower cost', 'Shares building heat', 'Space efficient']
+            }
+        ];
+        
+        // Grow bed types
+        const growBedTypes = [
+            {
+                type: 'fill_and_drain',
+                name: 'Fill and Drain',
+                description: 'Periodic flooding for excellent oxygenation'
+            },
+            {
+                type: 'standing_soil',
+                name: 'Standing Soil',
+                description: 'Traditional raised beds with soil'
+            },
+            {
+                type: 'wicking',
+                name: 'Wicking Beds',
+                description: 'Self-watering with reservoir below'
+            },
+            {
+                type: 'nft',
+                name: 'NFT System',
+                description: 'Thin nutrient film for leafy greens'
+            },
+            {
+                type: 'dwc',
+                name: 'Deep Water Culture',
+                description: 'Roots in oxygenated solution'
+            },
+            {
+                type: 'media_bed',
+                name: 'Media Bed',
+                description: 'Continuous flow through growing medium'
+            }
+        ];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            populateGreenhouseTypes();
+            populateGrowBedTypes();
+        });
+        
+        function populateGreenhouseTypes() {
+            const container = document.getElementById('greenhouseTypes');
+            container.innerHTML = greenhouseTypes.map(type => `
+                <div class="greenhouse-card" onclick="selectGreenhouseType('${type.type}')">
+                    <h3>${type.name}</h3>
+                    <p>${type.description}</p>
+                    <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                        ${type.advantages.map(adv => `<li>${adv}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+        
+        function populateGrowBedTypes() {
+            const container = document.getElementById('growBedOptions');
+            container.innerHTML = growBedTypes.map(type => `
+                <div class="grow-bed-card" onclick="selectGrowBed('${type.type}')">
+                    <h4>${type.name}</h4>
+                    <p>${type.description}</p>
+                </div>
+            `).join('');
+        }
+        
+        function selectGreenhouseType(type) {
+            greenhousePlan.type = type;
+            document.querySelectorAll('.greenhouse-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.greenhouse-card').classList.add('selected');
+        }
+        
+        function selectGrowBed(type) {
+            greenhousePlan.growBeds = [{
+                type: type,
+                count: 1,
+                dimensions: {}
+            }];
+            document.querySelectorAll('.grow-bed-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.grow-bed-card').classList.add('selected');
+            
+            // Get bed recommendations based on crop
+            if (greenhousePlan.crops.primaryCrop) {
+                recommendGrowBeds();
+            }
+        }
+        
+        async function getCompanionCrops() {
+            const primaryCrop = document.getElementById('primaryCrop').value;
+            if (!primaryCrop) {
+                alert('Please enter a primary crop');
+                return;
+            }
+            
+            const suggestionsDiv = document.getElementById('cropSuggestions');
+            suggestionsDiv.style.display = 'block';
+            suggestionsDiv.innerHTML = '<p>Loading companion plants... <span class="loading"></span></p>';
+            
+            // In production, this would call the API
+            // For demo, using static data
+            setTimeout(() => {
+                const companions = {
+                    'Tomatoes': ['Basil', 'Marigolds', 'Carrots', 'Nasturtiums'],
+                    'Lettuce': ['Radishes', 'Carrots', 'Chives', 'Strawberries'],
+                    'Peppers': ['Basil', 'Onions', 'Spinach', 'Tomatoes'],
+                    'default': ['Marigolds', 'Basil', 'Nasturtiums', 'Chives']
+                };
+                
+                const cropCompanions = companions[primaryCrop] || companions['default'];
+                greenhousePlan.crops = {
+                    primaryCrop: primaryCrop,
+                    companionCrops: cropCompanions
+                };
+                
+                suggestionsDiv.innerHTML = `
+                    <h4>Recommended Companion Plants:</h4>
+                    <div class="companion-list">
+                        ${cropCompanions.map(crop => `<span class="companion-chip">${crop}</span>`).join('')}
+                    </div>
+                    <p style="margin-top: 1rem; color: #666;">
+                        These plants will help ${primaryCrop} grow better by deterring pests, 
+                        improving soil, or providing other benefits.
+                    </p>
+                `;
+            }, 1000);
+        }
+        
+        async function recommendGrowBeds() {
+            const recommendationDiv = document.getElementById('bedRecommendation');
+            
+            // In production, this would call the API
+            const recommendations = {
+                'Tomatoes': {
+                    recommended: 'fill_and_drain',
+                    reason: 'Tomatoes thrive with periodic flooding that provides excellent oxygenation'
+                },
+                'Lettuce': {
+                    recommended: 'nft',
+                    reason: 'Lettuce grows quickly in NFT systems with minimal water usage'
+                },
+                'default': {
+                    recommended: 'fill_and_drain',
+                    reason: 'Versatile system suitable for most crops'
+                }
+            };
+            
+            const rec = recommendations[greenhousePlan.crops.primaryCrop] || recommendations['default'];
+            
+            recommendationDiv.innerHTML = `
+                <div style="background: #e8f5e9; padding: 1rem; border-radius: 5px;">
+                    <h4>💡 Recommendation for ${greenhousePlan.crops.primaryCrop}:</h4>
+                    <p>${rec.reason}</p>
+                </div>
+            `;
+        }
+        
+        function nextStep() {
+            if (validateCurrentStep()) {
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('completed');
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+                
+                updateButtons();
+                
+                if (currentStep === 5) {
+                    generateSummary();
+                }
+            }
+        }
+        
+        function previousStep() {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+            currentStep--;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+            
+            updateButtons();
+        }
+        
+        function updateButtons() {
+            document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
+            document.getElementById('nextBtn').style.display = currentStep < 5 ? 'block' : 'none';
+            document.getElementById('generateBtn').style.display = currentStep === 5 ? 'block' : 'none';
+        }
+        
+        function validateCurrentStep() {
+            switch (currentStep) {
+                case 1:
+                    if (!greenhousePlan.type) {
+                        alert('Please select a greenhouse type');
+                        return false;
+                    }
+                    break;
+                case 2:
+                    greenhousePlan.dimensions = {
+                        length: parseFloat(document.getElementById('length').value),
+                        width: parseFloat(document.getElementById('width').value),
+                        height: parseFloat(document.getElementById('height').value)
+                    };
+                    greenhousePlan.location = {
+                        latitude: parseFloat(document.getElementById('latitude').value),
+                        longitude: parseFloat(document.getElementById('longitude').value),
+                        climate_zone: document.getElementById('climateZone').value
+                    };
+                    break;
+                case 3:
+                    if (!greenhousePlan.crops.primaryCrop) {
+                        greenhousePlan.crops.primaryCrop = document.getElementById('primaryCrop').value;
+                    }
+                    if (!greenhousePlan.crops.primaryCrop) {
+                        alert('Please select a primary crop');
+                        return false;
+                    }
+                    break;
+                case 4:
+                    if (greenhousePlan.growBeds.length === 0) {
+                        alert('Please select a growing system');
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
+        
+        function generateSummary() {
+            greenhousePlan.features = {
+                hasClimateBattery: document.getElementById('hasClimateBattery').checked,
+                hasAutomation: document.getElementById('hasAutomation').checked,
+                hasAquaponics: document.getElementById('hasAquaponics').checked,
+                hasHydroponics: greenhousePlan.growBeds[0]?.type !== 'standing_soil'
+            };
+            
+            const summaryDiv = document.getElementById('planSummary');
+            const ghType = greenhouseTypes.find(t => t.type === greenhousePlan.type);
+            const bedType = growBedTypes.find(t => t.type === greenhousePlan.growBeds[0]?.type);
+            
+            summaryDiv.innerHTML = `
+                <div class="summary-section">
+                    <h3>Greenhouse Configuration</h3>
+                    <p><strong>Type:</strong> ${ghType?.name}</p>
+                    <p><strong>Dimensions:</strong> ${greenhousePlan.dimensions.length}' × ${greenhousePlan.dimensions.width}' × ${greenhousePlan.dimensions.height}'</p>
+                    <p><strong>Total Area:</strong> ${greenhousePlan.dimensions.length * greenhousePlan.dimensions.width} sq ft</p>
+                    <p><strong>Location:</strong> Climate Zone ${greenhousePlan.location.climate_zone}</p>
+                </div>
+                
+                <div class="summary-section">
+                    <h3>Crop Plan</h3>
+                    <p><strong>Primary Crop:</strong> ${greenhousePlan.crops.primaryCrop}</p>
+                    <p><strong>Companion Plants:</strong> ${greenhousePlan.crops.companionCrops?.join(', ') || 'None selected'}</p>
+                </div>
+                
+                <div class="summary-section">
+                    <h3>Growing System</h3>
+                    <p><strong>Type:</strong> ${bedType?.name}</p>
+                    <p><strong>Features:</strong></p>
+                    <ul style="margin-left: 1.5rem;">
+                        ${greenhousePlan.features.hasClimateBattery ? '<li>Climate Battery System</li>' : ''}
+                        ${greenhousePlan.features.hasAutomation ? '<li>Automation System</li>' : ''}
+                        ${greenhousePlan.features.hasAquaponics ? '<li>Aquaponics Integration</li>' : ''}
+                        ${greenhousePlan.features.hasHydroponics ? '<li>Hydroponic System</li>' : ''}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        async function generatePlan() {
+            const summaryDiv = document.getElementById('planSummary');
+            summaryDiv.innerHTML += '<p style="margin-top: 2rem;">Generating complete materials list... <span class="loading"></span></p>';
+            
+            // In production, this would call the API
+            setTimeout(() => {
+                const materials = [
+                    { name: 'Greenhouse Frame', quantity: 1, unit: 'kit', cost: 2500 },
+                    { name: 'Covering Material', quantity: 1000, unit: 'sq ft', cost: 150 },
+                    { name: 'Grow Beds', quantity: 4, unit: 'units', cost: 800 },
+                    { name: 'Irrigation System', quantity: 1, unit: 'kit', cost: 500 }
+                ];
+                
+                if (greenhousePlan.features.hasClimateBattery) {
+                    materials.push({ name: 'Climate Battery System', quantity: 1, unit: 'kit', cost: 3000 });
+                }
+                
+                const totalCost = materials.reduce((sum, item) => sum + item.cost, 0);
+                
+                summaryDiv.innerHTML += `
+                    <div class="materials-list">
+                        <h3>Materials List</h3>
+                        <div class="material-item">
+                            <div>Item</div>
+                            <div>Quantity</div>
+                            <div>Unit</div>
+                            <div>Cost</div>
+                        </div>
+                        ${materials.map(item => `
+                            <div class="material-item">
+                                <div>${item.name}</div>
+                                <div>${item.quantity}</div>
+                                <div>${item.unit}</div>
+                                <div>$${item.cost}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="cost-summary">
+                        Total Estimated Cost: $${totalCost.toLocaleString()}
+                    </div>
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <button class="btn-primary" onclick="exportPlan()">Export Plan as CSV</button>
+                    </div>
+                `;
+            }, 1500);
+        }
+        
+        function exportPlan() {
+            // In production, this would generate a proper CSV
+            alert('Plan exported! (In production, this would download a CSV file with your complete greenhouse plan and materials list)');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Topology Visualization</title>
+    <link rel="stylesheet" href="topology.css">
+    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-cola@2.5.1/cytoscape-cola.js"></script>
+    <script src="https://unpkg.com/cola@3.4.0/cola.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="topology-container">
+        <!-- Header -->
+        <header class="topology-header">
+            <div class="header-left">
+                <h1><i class="fas fa-project-diagram"></i> Network Topology</h1>
+                <div class="topology-stats">
+                    <span id="nodeCount">0 Devices</span>
+                    <span id="linkCount">0 Links</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="discovery-controls">
+                    <button id="discoverBtn" class="btn-primary">
+                        <i class="fas fa-search"></i> Start Discovery
+                    </button>
+                    <button id="refreshBtn" class="btn-secondary">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                    <button id="exportBtn" class="btn-secondary">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Discovery Panel -->
+        <div id="discoveryPanel" class="discovery-panel" style="display: none;">
+            <div class="panel-header">
+                <h3>Network Discovery Configuration</h3>
+                <button id="closePanelBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="panel-content">
+                <div class="discovery-tabs">
+                    <button class="tab-btn active" data-tab="basic">Basic Scan</button>
+                    <button class="tab-btn" data-tab="snmp">SNMP Discovery</button>
+                    <button class="tab-btn" data-tab="ssh">SSH/Telnet</button>
+                </div>
+
+                <!-- Basic Discovery Tab -->
+                <div id="basicTab" class="tab-content active">
+                    <div class="form-group">
+                        <label for="subnet">Subnet to discover:</label>
+                        <input type="text" id="subnet" placeholder="192.168.1" value="192.168.200">
+                    </div>
+                    <div class="form-group">
+                        <label for="timeout">Timeout (ms):</label>
+                        <input type="number" id="timeout" value="1000" min="100" max="10000">
+                    </div>
+                </div>
+
+                <!-- SNMP Discovery Tab -->
+                <div id="snmpTab" class="tab-content">
+                    <div class="form-group">
+                        <label for="snmpCommunity">SNMP Community:</label>
+                        <input type="text" id="snmpCommunity" placeholder="public">
+                    </div>
+                    <div class="form-group">
+                        <label for="snmpVersion">SNMP Version:</label>
+                        <select id="snmpVersion">
+                            <option value="2c">v2c</option>
+                            <option value="3">v3</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="collectMacTable"> Collect MAC Address Tables
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="collectCdp"> Collect CDP/LLDP Neighbors
+                        </label>
+                    </div>
+                </div>
+
+                <!-- SSH/Telnet Discovery Tab -->
+                <div id="sshTab" class="tab-content">
+                    <div class="form-group">
+                        <label for="sshUsername">Username:</label>
+                        <input type="text" id="sshUsername" placeholder="admin">
+                    </div>
+                    <div class="form-group">
+                        <label for="sshPassword">Password:</label>
+                        <input type="password" id="sshPassword" placeholder="password">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enableSsh" checked> Enable SSH
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enableTelnet"> Enable Telnet
+                        </label>
+                    </div>
+                </div>
+
+                <div class="panel-actions">
+                    <button id="startDiscoveryBtn" class="btn-primary">Start Discovery</button>
+                    <button id="cancelDiscoveryBtn" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-container">
+            <!-- Topology View -->
+            <div class="topology-view">
+                <div id="cy" class="cytoscape-container"></div>
+                
+                <!-- Topology Controls -->
+                <div class="topology-controls">
+                    <div class="layout-controls">
+                        <label>Layout:</label>
+                        <select id="layoutSelect">
+                            <option value="cola">Cola (Force-directed)</option>
+                            <option value="grid">Grid</option>
+                            <option value="circle">Circle</option>
+                            <option value="breadthfirst">Hierarchical</option>
+                            <option value="concentric">Concentric</option>
+                        </select>
+                        <button id="applyLayoutBtn" class="btn-small">Apply</button>
+                    </div>
+                    
+                    <div class="view-controls">
+                        <button id="fitBtn" class="btn-small">
+                            <i class="fas fa-expand-arrows-alt"></i> Fit
+                        </button>
+                        <button id="centerBtn" class="btn-small">
+                            <i class="fas fa-crosshairs"></i> Center
+                        </button>
+                        <button id="resetZoomBtn" class="btn-small">
+                            <i class="fas fa-search-minus"></i> Reset Zoom
+                        </button>
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <label>Filter:</label>
+                        <select id="deviceFilter">
+                            <option value="all">All Devices</option>
+                            <option value="router">Routers</option>
+                            <option value="switch">Switches</option>
+                            <option value="firewall">Firewalls</option>
+                            <option value="host">Hosts</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Discovery Progress -->
+                <div id="discoveryProgress" class="sidebar-section" style="display: none;">
+                    <h3>Discovery Progress</h3>
+                    <div class="progress-container">
+                        <div id="progressBar" class="progress-bar"></div>
+                        <div id="progressText">0%</div>
+                    </div>
+                    <div id="discoveryStatus">Preparing discovery...</div>
+                    <div id="discoveryLogs" class="discovery-logs"></div>
+                </div>
+
+                <!-- Legend -->
+                <div class="sidebar-section">
+                    <h3>Legend</h3>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-icon router"></div>
+                            <span>Router</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon switch"></div>
+                            <span>Switch</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon firewall"></div>
+                            <span>Firewall</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon host"></div>
+                            <span>Host</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line cdp"></div>
+                            <span>CDP Link</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line lldp"></div>
+                            <span>LLDP Link</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line learned"></div>
+                            <span>Learned Link</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node Details -->
+                <div id="nodeDetails" class="sidebar-section" style="display: none;">
+                    <h3>Device Details</h3>
+                    <div id="nodeInfo" class="node-info"></div>
+                </div>
+
+                <!-- Network Statistics -->
+                <div class="sidebar-section">
+                    <h3>Network Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalDevices">0</div>
+                            <div class="stat-label">Total Devices</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalLinks">0</div>
+                            <div class="stat-label">Total Links</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalSubnets">0</div>
+                            <div class="stat-label">Subnets</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalVlans">0</div>
+                            <div class="stat-label">VLANs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendor Distribution -->
+                <div class="sidebar-section">
+                    <h3>Vendor Distribution</h3>
+                    <div id="vendorChart" class="vendor-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="exportModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Export Topology</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="export-options">
+                        <div class="form-group">
+                            <label>Export Format:</label>
+                            <select id="exportFormat">
+                                <option value="png">PNG Image</option>
+                                <option value="json">JSON Data</option>
+                                <option value="graphml">GraphML</option>
+                                <option value="cytoscape">Cytoscape.js</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>File Name:</label>
+                            <input type="text" id="exportFilename" value="network-topology">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeExportModal()" class="btn-secondary">Cancel</button>
+                    <button onclick="performExport()" class="btn-primary">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="topology.js"></script>
+</body>
+</html>

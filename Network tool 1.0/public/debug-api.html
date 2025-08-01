@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug API Integration</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>API Integration Debug</h1>
+    
+    <div class="status">
+        <h3>Page Load Status:</h3>
+        <div id="load-status"></div>
+    </div>
+    
+    <div class="status">
+        <h3>API Section Check:</h3>
+        <div id="section-status"></div>
+    </div>
+    
+    <div class="status">
+        <h3>Navigation Check:</h3>
+        <div id="nav-status"></div>
+    </div>
+    
+    <div class="status">
+        <h3>Function Check:</h3>
+        <div id="function-status"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadStatus = document.getElementById('load-status');
+            const sectionStatus = document.getElementById('section-status');
+            const navStatus = document.getElementById('nav-status');
+            const functionStatus = document.getElementById('function-status');
+            
+            // Check if API section exists
+            const apiSection = document.getElementById('api-integration');
+            if (apiSection) {
+                sectionStatus.innerHTML = '<span class="success">✓ API Integration section found</span>';
+                sectionStatus.innerHTML += '<br>Classes: ' + apiSection.className;
+            } else {
+                sectionStatus.innerHTML = '<span class="error">✗ API Integration section NOT found</span>';
+            }
+            
+            // Check navigation link
+            const apiNavLink = document.querySelector('a[href="#api-integration"]');
+            if (apiNavLink) {
+                navStatus.innerHTML = '<span class="success">✓ API Integration nav link found</span>';
+                navStatus.innerHTML += '<br>Text: ' + apiNavLink.textContent;
+                
+                // Try clicking it
+                apiNavLink.click();
+                setTimeout(() => {
+                    if (apiSection && apiSection.classList.contains('active')) {
+                        navStatus.innerHTML += '<br><span class="success">✓ Navigation click works!</span>';
+                    } else {
+                        navStatus.innerHTML += '<br><span class="error">✗ Navigation click failed</span>';
+                    }
+                }, 100);
+            } else {
+                navStatus.innerHTML = '<span class="error">✗ API Integration nav link NOT found</span>';
+            }
+            
+            // Check if functions exist
+            const functions = [
+                'initializeApiIntegration',
+                'testApiConnection',
+                'saveApiConfig',
+                'executeApiOperation',
+                'switchApiTab'
+            ];
+            
+            functions.forEach(func => {
+                if (typeof window[func] === 'function') {
+                    functionStatus.innerHTML += `<span class="success">✓ ${func} exists</span><br>`;
+                } else {
+                    functionStatus.innerHTML += `<span class="error">✗ ${func} NOT found</span><br>`;
+                }
+            });
+            
+            loadStatus.innerHTML = '<span class="success">✓ Page loaded successfully</span>';
+        });
+    </script>
+</body>
+</html>

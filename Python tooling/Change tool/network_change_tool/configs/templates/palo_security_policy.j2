@@ -1,0 +1,22 @@
+# Palo Alto Security Policy Template
+# Variables: policy_name, from_zones, to_zones, source_addresses, destination_addresses, applications, services, action
+
+# Create security policy
+set rulebase security rules {{ policy_name }} from {{ from_zones | join(' ') }}
+set rulebase security rules {{ policy_name }} to {{ to_zones | join(' ') }}
+set rulebase security rules {{ policy_name }} source {{ source_addresses | join(' ') }}
+set rulebase security rules {{ policy_name }} destination {{ destination_addresses | join(' ') }}
+set rulebase security rules {{ policy_name }} application {{ applications | join(' ') }}
+set rulebase security rules {{ policy_name }} service {{ services | join(' ') }}
+set rulebase security rules {{ policy_name }} action {{ action }}
+
+{% if log_setting %}
+set rulebase security rules {{ policy_name }} log-setting {{ log_setting }}
+{% endif %}
+
+{% if profile_setting %}
+set rulebase security rules {{ policy_name }} profile-setting {{ profile_setting }}
+{% endif %}
+
+# Commit configuration
+commit

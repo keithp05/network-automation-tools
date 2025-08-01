@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Management Platform</title>
+    <link rel="stylesheet" href="dashboard.css?v=2">
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-network-wired"></i> NetManager</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#dashboard" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#discovery" class="nav-link"><i class="fas fa-search"></i> Network Discovery</a></li>
+                <li><a href="#credentials" class="nav-link"><i class="fas fa-key"></i> Credentials</a></li>
+                <li><a href="#advanced-discovery" class="nav-link"><i class="fas fa-project-diagram"></i> Advanced Discovery</a></li>
+                <li><a href="#devices" class="nav-link"><i class="fas fa-server"></i> Devices</a></li>
+                <li><a href="#policies" class="nav-link"><i class="fas fa-shield-alt"></i> Firewall Policies</a></li>
+                <li><a href="#interfaces" class="nav-link"><i class="fas fa-ethernet"></i> Interface Stats</a></li>
+                <li><a href="#api-integration" class="nav-link"><i class="fas fa-plug"></i> API Integration</a></li>
+                <li><a href="#python-scripts" class="nav-link"><i class="fas fa-code"></i> Python Scripts</a></li>
+                <li><a href="#universal-search" class="nav-link"><i class="fas fa-search-plus"></i> Universal Search</a></li>
+                <li><a href="#config-ai" class="nav-link"><i class="fas fa-robot"></i> AI Config Generator</a></li>
+                <li><a href="#chat" class="nav-link"><i class="fas fa-comments"></i> AI Assistant</a></li>
+                <li><a href="#n8n-workflows" class="nav-link"><i class="fas fa-project-diagram"></i> N8N Workflows</a></li>
+                <li><a href="#alerts" class="nav-link"><i class="fas fa-exclamation-triangle"></i> Alerts</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="status-indicator">
+                        <span class="status-dot online"></span>
+                        <span>System Online</span>
+                    </div>
+                    <div class="timestamp" id="currentTime"></div>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="dashboard-grid">
+                    <!-- Summary Cards -->
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="card-icon"><i class="fas fa-server"></i></div>
+                            <div class="card-content">
+                                <h3 id="totalDevices">0</h3>
+                                <p>Total Devices</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+                            <div class="card-content">
+                                <h3 id="totalPolicies">0</h3>
+                                <p>Firewall Policies</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="card-content">
+                                <h3 id="activeAlerts">0</h3>
+                                <p>Active Alerts</p>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon"><i class="fas fa-clock"></i></div>
+                            <div class="card-content">
+                                <h3 id="recentChanges">0</h3>
+                                <p>Recent Changes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="switchSection('discovery')">
+                                <i class="fas fa-search"></i> Network Scan
+                            </button>
+                            <button class="action-btn" onclick="switchSection('config-ai')">
+                                <i class="fas fa-robot"></i> Generate Config
+                            </button>
+                            <button class="action-btn" onclick="switchSection('chat')">
+                                <i class="fas fa-comments"></i> AI Assistant
+                            </button>
+                            <button class="action-btn" onclick="addDevice()">
+                                <i class="fas fa-plus"></i> Add Device
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Alerts -->
+                    <div class="recent-alerts">
+                        <h3>Recent Alerts</h3>
+                        <div id="recentAlertsList" class="alerts-list">
+                            <p class="no-data">No recent alerts</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Changes -->
+                    <div class="recent-changes">
+                        <h3>Recent Changes</h3>
+                        <div id="recentChangesList" class="changes-list">
+                            <p class="no-data">No recent changes</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Network Discovery Section -->
+            <section id="discovery" class="content-section">
+                <div class="discovery-container">
+                    <div class="discovery-controls">
+                        <div class="input-group">
+                            <label for="subnet">Subnet to scan:</label>
+                            <input type="text" id="subnet" placeholder="192.168.200" value="192.168.200">
+                            <button id="startScan" class="btn-primary">Start Scan</button>
+                            <button id="stopScan" class="btn-secondary" disabled>Stop Scan</button>
+                        </div>
+                    </div>
+
+                    <div class="status-bar">
+                        <div id="statusMessage">Ready to scan</div>
+                        <div class="progress-container">
+                            <div id="progressBar" class="progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="discovery-results">
+                        <div class="result-card">
+                            <h3>🖧 Network Interfaces</h3>
+                            <div id="interfaces" class="result-content">
+                                <p class="placeholder">No interfaces discovered yet</p>
+                            </div>
+                        </div>
+
+                        <div class="result-card">
+                            <h3>🟢 Active Hosts</h3>
+                            <div id="activeHosts" class="result-content">
+                                <p class="placeholder">No active hosts found yet</p>
+                            </div>
+                        </div>
+
+                        <div class="result-card">
+                            <h3>🔓 Open Ports</h3>
+                            <div id="openPorts" class="result-content">
+                                <p class="placeholder">No open ports discovered yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Credentials Section -->
+            <section id="credentials" class="content-section">
+                <div class="credentials-container">
+                    <div class="section-header">
+                        <h2>Network Credentials Management</h2>
+                        <button onclick="addCredentials()" class="btn-primary">
+                            <i class="fas fa-plus"></i> Add Credentials
+                        </button>
+                    </div>
+
+                    <div id="credentialsList" class="credentials-grid">
+                        <p class="no-data">No credentials configured</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Advanced Discovery Section -->
+            <section id="advanced-discovery" class="content-section">
+                <div class="advanced-discovery-container">
+                    <div class="section-header">
+                        <h2>Advanced Network Discovery</h2>
+                        <div class="discovery-actions">
+                            <button id="startAdvancedDiscovery" class="btn-primary">
+                                <i class="fas fa-play"></i> Start Advanced Discovery
+                            </button>
+                            <button id="stopAdvancedDiscovery" class="btn-secondary" disabled>
+                                <i class="fas fa-stop"></i> Stop Discovery
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Discovery Configuration -->
+                    <div class="discovery-config">
+                        <div class="config-section">
+                            <h3>Seed IP Addresses</h3>
+                            <div class="form-group">
+                                <label for="seedIPs">Starting IP addresses (one per line):</label>
+                                <textarea id="seedIPs" placeholder="192.168.1.1&#10;10.0.1.1&#10;172.16.1.1" rows="4"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="config-section">
+                            <h3>Credential Sets</h3>
+                            <div id="credentialSelection" class="credential-checkboxes">
+                                <p class="no-data">No credentials available. Please add credentials first.</p>
+                            </div>
+                        </div>
+
+                        <div class="config-section">
+                            <h3>Discovery Options</h3>
+                            <div class="options-grid">
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="enableCDP" checked> Discover CDP Neighbors
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="enableLLDP" checked> Discover LLDP Neighbors
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="enableMacTable" checked> Analyze MAC Address Tables
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="enableSNMP" checked> Enable SNMP Discovery
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label for="maxIterations">Max Discovery Iterations:</label>
+                                    <input type="number" id="maxIterations" value="3" min="1" max="10">
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="includeUnreachable"> Include Unreachable Devices
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Discovery Progress -->
+                    <div id="discoveryProgressSection" class="discovery-progress" style="display: none;">
+                        <h3>Discovery Progress</h3>
+                        <div class="progress-info">
+                            <div class="progress-stats">
+                                <span id="discoveryPhase">Idle</span> - 
+                                <span id="discoveryCompleted">0</span>/<span id="discoveryTotal">0</span> devices
+                            </div>
+                            <div class="progress-container">
+                                <div id="discoveryProgressBar" class="progress-bar"></div>
+                            </div>
+                        </div>
+                        <div id="discoveryCurrentDevice" class="current-device"></div>
+                        <div id="discoveryLogs" class="discovery-logs"></div>
+                    </div>
+
+                    <!-- Discovery Results -->
+                    <div id="discoveryResults" class="discovery-results" style="display: none;">
+                        <h3>Discovery Results</h3>
+                        
+                        <div class="results-summary">
+                            <div class="summary-card">
+                                <div class="summary-number" id="totalDiscoveredDevices">0</div>
+                                <div class="summary-label">Devices Discovered</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-number" id="totalNeighborConnections">0</div>
+                                <div class="summary-label">Neighbor Connections</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-number" id="totalMacMappings">0</div>
+                                <div class="summary-label">MAC Mappings</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-number" id="totalInterfaceConnections">0</div>
+                                <div class="summary-label">Interface Connections</div>
+                            </div>
+                        </div>
+
+                        <div class="results-tabs">
+                            <button class="tab-btn active" data-tab="devices-tab">Discovered Devices</button>
+                            <button class="tab-btn" data-tab="connections-tab">Interface Connections</button>
+                            <button class="tab-btn" data-tab="mac-table-tab">MAC Address Mappings</button>
+                            <button class="tab-btn" data-tab="topology-tab">Network Topology</button>
+                        </div>
+
+                        <div id="devices-tab" class="tab-content active">
+                            <div id="discoveredDevicesTable" class="devices-table"></div>
+                        </div>
+
+                        <div id="connections-tab" class="tab-content">
+                            <div id="interfaceConnectionsTable" class="connections-table"></div>
+                        </div>
+
+                        <div id="mac-table-tab" class="tab-content">
+                            <div id="macMappingsTable" class="mac-table"></div>
+                        </div>
+
+                        <div id="topology-tab" class="tab-content">
+                            <div class="topology-actions">
+                                <button onclick="viewFullTopology()" class="btn-primary">
+                                    <i class="fas fa-external-link-alt"></i> View Full Topology
+                                </button>
+                                <button onclick="exportTopology()" class="btn-secondary">
+                                    <i class="fas fa-download"></i> Export Topology
+                                </button>
+                            </div>
+                            <div id="topologyPreview" class="topology-preview"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Devices Section -->
+            <section id="devices" class="content-section">
+                <div class="devices-container">
+                    <div class="section-header">
+                        <h2>Network Devices</h2>
+                        <button onclick="addDevice()" class="btn-primary">
+                            <i class="fas fa-plus"></i> Add Device
+                        </button>
+                    </div>
+
+                    <div id="devicesList" class="devices-grid">
+                        <p class="no-data">No devices configured</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Firewall Policies Section -->
+            <section id="policies" class="content-section">
+                <div class="policies-container">
+                    <div class="section-header">
+                        <h2>Firewall Policy Management</h2>
+                        <div class="policy-actions">
+                            <button onclick="refreshPolicies()" class="btn-primary">
+                                <i class="fas fa-sync"></i> Refresh Policies
+                            </button>
+                            <button onclick="exportPolicies()" class="btn-secondary">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="policy-filters">
+                        <div class="filter-group">
+                            <label for="deviceFilter">Device:</label>
+                            <select id="deviceFilter">
+                                <option value="">All Devices</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="policyTypeFilter">Policy Type:</label>
+                            <select id="policyTypeFilter">
+                                <option value="">All Types</option>
+                                <option value="allow">Allow</option>
+                                <option value="deny">Deny</option>
+                                <option value="nat">NAT</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="statusFilter">Status:</label>
+                            <select id="statusFilter">
+                                <option value="">All</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="changed">Recently Changed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="policiesTable" class="policies-table">
+                        <p class="no-data">No firewall policies configured. Connect devices to start tracking policies.</p>
+                    </div>
+
+                    <div class="policy-summary">
+                        <div class="summary-stats">
+                            <div class="stat-card">
+                                <h4 id="totalPoliciesCount">0</h4>
+                                <p>Total Policies</p>
+                            </div>
+                            <div class="stat-card">
+                                <h4 id="activePoliciesCount">0</h4>
+                                <p>Active Policies</p>
+                            </div>
+                            <div class="stat-card">
+                                <h4 id="changedPoliciesCount">0</h4>
+                                <p>Recently Changed</p>
+                            </div>
+                            <div class="stat-card">
+                                <h4 id="securityAlertsCount">0</h4>
+                                <p>Security Alerts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interface Statistics Section -->
+            <section id="interfaces" class="content-section">
+                <div class="interfaces-container">
+                    <div class="section-header">
+                        <h2>Interface Statistics Monitoring</h2>
+                        <div class="interface-actions">
+                            <button onclick="refreshInterfaces()" class="btn-primary">
+                                <i class="fas fa-sync"></i> Refresh Stats
+                            </button>
+                            <button onclick="exportInterfaceStats()" class="btn-secondary">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button onclick="configureMonitoring()" class="btn-secondary">
+                                <i class="fas fa-cog"></i> Configure Monitoring
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="interface-filters">
+                        <div class="filter-group">
+                            <label for="interfaceDeviceFilter">Device:</label>
+                            <select id="interfaceDeviceFilter">
+                                <option value="">All Devices</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="interfaceTypeFilter">Interface Type:</label>
+                            <select id="interfaceTypeFilter">
+                                <option value="">All Types</option>
+                                <option value="ethernet">Ethernet</option>
+                                <option value="serial">Serial</option>
+                                <option value="tunnel">Tunnel</option>
+                                <option value="loopback">Loopback</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="interfaceStatusFilter">Status:</label>
+                            <select id="interfaceStatusFilter">
+                                <option value="">All</option>
+                                <option value="up">Up</option>
+                                <option value="down">Down</option>
+                                <option value="admin-down">Admin Down</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="interfacesTable" class="interfaces-table">
+                        <p class="no-data">No interface statistics available. Connect devices to start monitoring interfaces.</p>
+                    </div>
+
+                    <div class="interface-charts">
+                        <div class="chart-container">
+                            <h4>Top Interfaces by Traffic</h4>
+                            <div id="trafficChart" class="chart-placeholder">
+                                <p>Traffic data will appear here when interfaces are monitored</p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h4>Interface Utilization</h4>
+                            <div id="utilizationChart" class="chart-placeholder">
+                                <p>Utilization data will appear here when interfaces are monitored</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Integration Section -->
+            <section id="api-integration" class="content-section">
+                <div class="api-integration-container">
+                    <div class="section-header">
+                        <h2>API Integration Management</h2>
+                        <div class="api-actions">
+                            <button onclick="testAllConnections()" class="btn-primary">
+                                <i class="fas fa-plug"></i> Test All Connections
+                            </button>
+                            <button onclick="exportApiConfig()" class="btn-secondary">
+                                <i class="fas fa-download"></i> Export Config
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- API Integration Tabs -->
+                    <div class="api-tabs">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="arista-api">
+                                <i class="fas fa-server"></i> Arista eAPI
+                            </button>
+                            <button class="tab-btn" data-tab="firepower-api">
+                                <i class="fas fa-shield-alt"></i> Cisco Firepower
+                            </button>
+                            <button class="tab-btn" data-tab="paloalto-api">
+                                <i class="fas fa-fire"></i> Palo Alto
+                            </button>
+                            <button class="tab-btn" data-tab="fortigate-api">
+                                <i class="fas fa-fortress"></i> FortiGate
+                            </button>
+                        </div>
+
+                        <!-- Arista API Tab -->
+                        <div id="arista-api" class="tab-content active">
+                            <div class="api-form-container">
+                                <h3>Arista eAPI Configuration</h3>
+                                <div class="connection-status" id="arista-status">
+                                    <span class="status-dot offline"></span>
+                                    <span>Not Connected</span>
+                                </div>
+                                
+                                <form class="api-form" id="arista-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="arista-host">Host/IP Address:</label>
+                                            <input type="text" id="arista-host" placeholder="192.168.1.100" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="arista-port">Port:</label>
+                                            <input type="number" id="arista-port" value="443" min="1" max="65535">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="arista-username">Username:</label>
+                                            <input type="text" id="arista-username" placeholder="admin" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="arista-password">Password:</label>
+                                            <input type="password" id="arista-password" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="arista-protocol">Protocol:</label>
+                                            <select id="arista-protocol">
+                                                <option value="https">HTTPS</option>
+                                                <option value="http">HTTP</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" onclick="testApiConnection('arista')" class="btn-secondary">
+                                            <i class="fas fa-plug"></i> Test Connection
+                                        </button>
+                                        <button type="button" onclick="saveApiConfig('arista')" class="btn-primary">
+                                            <i class="fas fa-save"></i> Save Configuration
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div class="api-operations" id="arista-operations" style="display: none;">
+                                    <h4>Available Operations</h4>
+                                    <div class="operation-buttons">
+                                        <button onclick="executeApiOperation('arista', 'getDeviceInfo')" class="btn-operation">
+                                            <i class="fas fa-info"></i> Get Device Info
+                                        </button>
+                                        <button onclick="executeApiOperation('arista', 'getInterfaces')" class="btn-operation">
+                                            <i class="fas fa-ethernet"></i> Get Interfaces
+                                        </button>
+                                        <button onclick="executeApiOperation('arista', 'getVlans')" class="btn-operation">
+                                            <i class="fas fa-network-wired"></i> Get VLANs
+                                        </button>
+                                        <button onclick="executeApiOperation('arista', 'getLldpNeighbors')" class="btn-operation">
+                                            <i class="fas fa-project-diagram"></i> Get LLDP Neighbors
+                                        </button>
+                                        <button onclick="executeApiOperation('arista', 'backup')" class="btn-operation">
+                                            <i class="fas fa-download"></i> Backup Config
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Firepower API Tab -->
+                        <div id="firepower-api" class="tab-content">
+                            <div class="api-form-container">
+                                <h3>Cisco Firepower Management Center API</h3>
+                                <div class="connection-status" id="firepower-status">
+                                    <span class="status-dot offline"></span>
+                                    <span>Not Connected</span>
+                                </div>
+                                
+                                <form class="api-form" id="firepower-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="firepower-host">FMC Host/IP:</label>
+                                            <input type="text" id="firepower-host" placeholder="192.168.1.200" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="firepower-port">Port:</label>
+                                            <input type="number" id="firepower-port" value="443" min="1" max="65535">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="firepower-username">Username:</label>
+                                            <input type="text" id="firepower-username" placeholder="admin" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="firepower-password">Password:</label>
+                                            <input type="password" id="firepower-password" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" onclick="testApiConnection('firepower')" class="btn-secondary">
+                                            <i class="fas fa-plug"></i> Test Connection
+                                        </button>
+                                        <button type="button" onclick="saveApiConfig('firepower')" class="btn-primary">
+                                            <i class="fas fa-save"></i> Save Configuration
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div class="api-operations" id="firepower-operations" style="display: none;">
+                                    <h4>Available Operations</h4>
+                                    <div class="operation-buttons">
+                                        <button onclick="executeApiOperation('firepower', 'getDevices')" class="btn-operation">
+                                            <i class="fas fa-server"></i> Get Devices
+                                        </button>
+                                        <button onclick="executeApiOperation('firepower', 'getAccessPolicies')" class="btn-operation">
+                                            <i class="fas fa-shield-alt"></i> Get Access Policies
+                                        </button>
+                                        <button onclick="executeApiOperation('firepower', 'getNetworkObjects')" class="btn-operation">
+                                            <i class="fas fa-globe"></i> Get Network Objects
+                                        </button>
+                                        <button onclick="executeApiOperation('firepower', 'getNATRules')" class="btn-operation">
+                                            <i class="fas fa-exchange-alt"></i> Get NAT Rules
+                                        </button>
+                                        <button onclick="executeApiOperation('firepower', 'backup')" class="btn-operation">
+                                            <i class="fas fa-download"></i> Backup Config
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Palo Alto API Tab -->
+                        <div id="paloalto-api" class="tab-content">
+                            <div class="api-form-container">
+                                <h3>Palo Alto Networks PAN-OS API</h3>
+                                <div class="connection-status" id="paloalto-status">
+                                    <span class="status-dot offline"></span>
+                                    <span>Not Connected</span>
+                                </div>
+                                
+                                <form class="api-form" id="paloalto-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="paloalto-host">Firewall Host/IP:</label>
+                                            <input type="text" id="paloalto-host" placeholder="192.168.1.10" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="paloalto-port">Port:</label>
+                                            <input type="number" id="paloalto-port" value="443" min="1" max="65535">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="paloalto-username">Username:</label>
+                                            <input type="text" id="paloalto-username" placeholder="admin" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="paloalto-password">Password:</label>
+                                            <input type="password" id="paloalto-password" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" onclick="testApiConnection('paloalto')" class="btn-secondary">
+                                            <i class="fas fa-plug"></i> Test Connection
+                                        </button>
+                                        <button type="button" onclick="saveApiConfig('paloalto')" class="btn-primary">
+                                            <i class="fas fa-save"></i> Save Configuration
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div class="api-operations" id="paloalto-operations" style="display: none;">
+                                    <h4>Available Operations</h4>
+                                    <div class="operation-buttons">
+                                        <button onclick="executeApiOperation('paloalto', 'getSystemInfo')" class="btn-operation">
+                                            <i class="fas fa-info"></i> Get System Info
+                                        </button>
+                                        <button onclick="executeApiOperation('paloalto', 'getInterfaces')" class="btn-operation">
+                                            <i class="fas fa-ethernet"></i> Get Interfaces
+                                        </button>
+                                        <button onclick="executeApiOperation('paloalto', 'getSecurityPolicies')" class="btn-operation">
+                                            <i class="fas fa-shield-alt"></i> Get Security Policies
+                                        </button>
+                                        <button onclick="executeApiOperation('paloalto', 'getZones')" class="btn-operation">
+                                            <i class="fas fa-layer-group"></i> Get Zones
+                                        </button>
+                                        <button onclick="executeApiOperation('paloalto', 'backup')" class="btn-operation">
+                                            <i class="fas fa-download"></i> Backup Config
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FortiGate API Tab -->
+                        <div id="fortigate-api" class="tab-content">
+                            <div class="api-form-container">
+                                <h3>FortiGate FortiOS API</h3>
+                                <div class="connection-status" id="fortigate-status">
+                                    <span class="status-dot offline"></span>
+                                    <span>Not Connected</span>
+                                </div>
+                                
+                                <form class="api-form" id="fortigate-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="fortigate-host">FortiGate Host/IP:</label>
+                                            <input type="text" id="fortigate-host" placeholder="192.168.1.50" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fortigate-port">Port:</label>
+                                            <input type="number" id="fortigate-port" value="443" min="1" max="65535">
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="fortigate-username">Username:</label>
+                                            <input type="text" id="fortigate-username" placeholder="admin" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fortigate-password">Password:</label>
+                                            <input type="password" id="fortigate-password" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" onclick="testApiConnection('fortigate')" class="btn-secondary">
+                                            <i class="fas fa-plug"></i> Test Connection
+                                        </button>
+                                        <button type="button" onclick="saveApiConfig('fortigate')" class="btn-primary">
+                                            <i class="fas fa-save"></i> Save Configuration
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div class="api-operations" id="fortigate-operations" style="display: none;">
+                                    <h4>Available Operations</h4>
+                                    <div class="operation-buttons">
+                                        <button onclick="executeApiOperation('fortigate', 'getSystemStatus')" class="btn-operation">
+                                            <i class="fas fa-info"></i> Get System Status
+                                        </button>
+                                        <button onclick="executeApiOperation('fortigate', 'getInterfaces')" class="btn-operation">
+                                            <i class="fas fa-ethernet"></i> Get Interfaces
+                                        </button>
+                                        <button onclick="executeApiOperation('fortigate', 'getFirewallPolicies')" class="btn-operation">
+                                            <i class="fas fa-shield-alt"></i> Get Firewall Policies
+                                        </button>
+                                        <button onclick="executeApiOperation('fortigate', 'getVIPs')" class="btn-operation">
+                                            <i class="fas fa-globe"></i> Get VIPs
+                                        </button>
+                                        <button onclick="executeApiOperation('fortigate', 'backup')" class="btn-operation">
+                                            <i class="fas fa-download"></i> Backup Config
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Results Section -->
+                    <div class="api-results" id="api-results" style="display: none;">
+                        <div class="section-header">
+                            <h3>Operation Results</h3>
+                            <button onclick="clearApiResults()" class="btn-secondary">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+                        <div class="results-content">
+                            <pre id="api-results-content"></pre>
+                        </div>
+                    </div>
+
+                    <!-- API Status Overview -->
+                    <div class="api-status-overview">
+                        <h3>API Connection Status Overview</h3>
+                        <div class="status-grid">
+                            <div class="status-card" id="arista-status-card">
+                                <div class="status-header">
+                                    <h4>Arista eAPI</h4>
+                                    <span class="status-indicator offline">Offline</span>
+                                </div>
+                                <div class="status-details">
+                                    <p>Host: <span id="arista-host-display">Not configured</span></p>
+                                    <p>Last Test: <span id="arista-last-test">Never</span></p>
+                                </div>
+                            </div>
+                            <div class="status-card" id="firepower-status-card">
+                                <div class="status-header">
+                                    <h4>Cisco Firepower</h4>
+                                    <span class="status-indicator offline">Offline</span>
+                                </div>
+                                <div class="status-details">
+                                    <p>Host: <span id="firepower-host-display">Not configured</span></p>
+                                    <p>Last Test: <span id="firepower-last-test">Never</span></p>
+                                </div>
+                            </div>
+                            <div class="status-card" id="paloalto-status-card">
+                                <div class="status-header">
+                                    <h4>Palo Alto</h4>
+                                    <span class="status-indicator offline">Offline</span>
+                                </div>
+                                <div class="status-details">
+                                    <p>Host: <span id="paloalto-host-display">Not configured</span></p>
+                                    <p>Last Test: <span id="paloalto-last-test">Never</span></p>
+                                </div>
+                            </div>
+                            <div class="status-card" id="fortigate-status-card">
+                                <div class="status-header">
+                                    <h4>FortiGate</h4>
+                                    <span class="status-indicator offline">Offline</span>
+                                </div>
+                                <div class="status-details">
+                                    <p>Host: <span id="fortigate-host-display">Not configured</span></p>
+                                    <p>Last Test: <span id="fortigate-last-test">Never</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Python Scripts Section -->
+            <section id="python-scripts" class="content-section">
+                <div class="python-scripts-container">
+                    <div class="section-header">
+                        <h2>Python Script Engine</h2>
+                        <div class="script-actions">
+                            <button onclick="createNewScript()" class="btn-primary">
+                                <i class="fas fa-plus"></i> New Script
+                            </button>
+                            <button onclick="importScript()" class="btn-secondary">
+                                <i class="fas fa-upload"></i> Import
+                            </button>
+                            <button onclick="refreshScriptLibrary()" class="btn-secondary">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Script Library -->
+                    <div class="script-library">
+                        <div class="library-sidebar">
+                            <h3>Script Library</h3>
+                            <div class="script-search">
+                                <input type="text" id="script-search" placeholder="Search scripts..." onkeyup="filterScripts()">
+                            </div>
+                            <div class="script-categories">
+                                <div class="category active" data-category="all">
+                                    <i class="fas fa-list"></i> All Scripts
+                                </div>
+                                <div class="category" data-category="health">
+                                    <i class="fas fa-heartbeat"></i> Health Checks
+                                </div>
+                                <div class="category" data-category="monitoring">
+                                    <i class="fas fa-chart-line"></i> Monitoring
+                                </div>
+                                <div class="category" data-category="analysis">
+                                    <i class="fas fa-analytics"></i> Analysis
+                                </div>
+                                <div class="category" data-category="automation">
+                                    <i class="fas fa-robot"></i> Automation
+                                </div>
+                            </div>
+                            <div id="script-list" class="script-list">
+                                <!-- Script items will be populated here -->
+                            </div>
+                        </div>
+
+                        <div class="script-editor-area">
+                            <!-- Script Editor Tabs -->
+                            <div class="editor-tabs">
+                                <div class="tab-bar">
+                                    <div class="tab welcome-tab active" data-tab="welcome">
+                                        <span>Welcome</span>
+                                    </div>
+                                </div>
+                                <div class="tab-actions">
+                                    <button onclick="saveCurrentScript()" class="btn-primary btn-sm">
+                                        <i class="fas fa-save"></i> Save
+                                    </button>
+                                    <button onclick="runCurrentScript()" class="btn-success btn-sm">
+                                        <i class="fas fa-play"></i> Run
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Welcome Tab -->
+                            <div id="welcome-tab" class="editor-tab active">
+                                <div class="welcome-content">
+                                    <h3>Python Script Engine</h3>
+                                    <p>Create and execute Python scripts to automate network management tasks.</p>
+                                    
+                                    <div class="quick-start">
+                                        <h4>Quick Start</h4>
+                                        <div class="quick-actions">
+                                            <button onclick="loadExampleScript('device_health_check.py')" class="example-btn">
+                                                <i class="fas fa-heartbeat"></i>
+                                                Device Health Check
+                                            </button>
+                                            <button onclick="loadExampleScript('interface_utilization_report.py')" class="example-btn">
+                                                <i class="fas fa-chart-bar"></i>
+                                                Interface Report
+                                            </button>
+                                            <button onclick="loadExampleScript('network_topology_analyzer.py')" class="example-btn">
+                                                <i class="fas fa-project-diagram"></i>
+                                                Topology Analyzer
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="available-functions">
+                                        <h4>Available Functions</h4>
+                                        <div class="function-list">
+                                            <div class="function-item">
+                                                <code>get_network_devices()</code>
+                                                <span>Get all discovered devices</span>
+                                            </div>
+                                            <div class="function-item">
+                                                <code>get_device_config(ip)</code>
+                                                <span>Get device configuration</span>
+                                            </div>
+                                            <div class="function-item">
+                                                <code>get_network_topology()</code>
+                                                <span>Get topology data</span>
+                                            </div>
+                                            <div class="function-item">
+                                                <code>get_interface_stats(ip)</code>
+                                                <span>Get interface statistics</span>
+                                            </div>
+                                            <div class="function-item">
+                                                <code>save_result(key, value)</code>
+                                                <span>Save script results</span>
+                                            </div>
+                                            <div class="function-item">
+                                                <code>ping_device(ip)</code>
+                                                <span>Test device connectivity</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Script Editor -->
+                            <div id="script-editor-tab" class="editor-tab" style="display: none;">
+                                <div class="editor-container">
+                                    <div class="editor-header">
+                                        <div class="script-info">
+                                            <input type="text" id="script-name" placeholder="Script Name" class="script-name-input">
+                                            <input type="text" id="script-description" placeholder="Script Description" class="script-desc-input">
+                                        </div>
+                                        <div class="script-metadata">
+                                            <select id="script-category" class="category-select">
+                                                <option value="automation">Automation</option>
+                                                <option value="health">Health Check</option>
+                                                <option value="monitoring">Monitoring</option>
+                                                <option value="analysis">Analysis</option>
+                                                <option value="reporting">Reporting</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="code-editor">
+                                        <textarea id="python-code-editor" class="code-textarea" placeholder="# Write your Python script here...
+# Available functions:
+# - get_network_devices()
+# - get_device_config(ip)
+# - get_network_topology()
+# - get_interface_stats(ip)
+# - save_result(key, value)
+# - ping_device(ip)
+
+def main():
+    # Your code here
+    pass
+
+if __name__ == '__main__':
+    main()"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Script Parameters -->
+                            <div class="script-parameters" id="script-parameters" style="display: none;">
+                                <h4>Script Parameters</h4>
+                                <div id="parameters-form">
+                                    <!-- Parameters will be generated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Script Output -->
+                        <div class="script-output-panel">
+                            <div class="output-header">
+                                <h4>Output</h4>
+                                <div class="output-controls">
+                                    <button onclick="clearOutput()" class="btn-secondary btn-sm">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                    <button onclick="downloadOutput()" class="btn-secondary btn-sm">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="script-output" class="output-content">
+                                <div class="output-placeholder">
+                                    Script output will appear here...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Running Scripts -->
+                    <div class="running-scripts">
+                        <h3>Running Scripts</h3>
+                        <div id="running-scripts-list" class="running-list">
+                            <p class="no-data">No scripts currently running</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Universal Search Section -->
+            <section id="universal-search" class="content-section">
+                <div class="search-container">
+                    <div class="section-header">
+                        <h2>Universal Search</h2>
+                        <div class="search-actions">
+                            <button onclick="rebuildSearchIndex()" class="btn-secondary">
+                                <i class="fas fa-sync"></i> Rebuild Index
+                            </button>
+                            <button onclick="exportSearchData()" class="btn-secondary">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search Interface -->
+                    <div class="search-interface">
+                        <div class="search-box">
+                            <div class="search-input-container">
+                                <input type="text" id="universal-search-input" placeholder="Search across all network data..." class="search-input">
+                                <button onclick="performSearch()" class="search-btn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div class="search-suggestions" id="search-suggestions" style="display: none;">
+                                <!-- Auto-complete suggestions -->
+                            </div>
+                        </div>
+
+                        <!-- Search Filters -->
+                        <div class="search-filters">
+                            <div class="filter-group">
+                                <label>Data Types:</label>
+                                <div class="filter-checkboxes">
+                                    <label><input type="checkbox" value="device" checked> Devices</label>
+                                    <label><input type="checkbox" value="interface" checked> Interfaces</label>
+                                    <label><input type="checkbox" value="config" checked> Configurations</label>
+                                    <label><input type="checkbox" value="policy" checked> Policies</label>
+                                    <label><input type="checkbox" value="script" checked> Scripts</label>
+                                    <label><input type="checkbox" value="topology" checked> Topology</label>
+                                    <label><input type="checkbox" value="log" checked> Logs</label>
+                                </div>
+                            </div>
+                            <div class="filter-group">
+                                <label>Sort by:</label>
+                                <select id="search-sort">
+                                    <option value="relevance">Relevance</option>
+                                    <option value="date">Date</option>
+                                    <option value="type">Type</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Time Range:</label>
+                                <select id="search-time-range">
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">Past Week</option>
+                                    <option value="month">Past Month</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div class="search-results-container">
+                        <div class="search-sidebar">
+                            <div class="search-stats" id="search-stats" style="display: none;">
+                                <h4>Search Statistics</h4>
+                                <div class="stats-content">
+                                    <!-- Stats will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <div class="search-facets" id="search-facets" style="display: none;">
+                                <h4>Filter Results</h4>
+                                <div class="facet-group">
+                                    <h5>By Type</h5>
+                                    <div id="type-facets" class="facet-list">
+                                        <!-- Type facets will be populated here -->
+                                    </div>
+                                </div>
+                                <div class="facet-group">
+                                    <h5>By Date</h5>
+                                    <div id="date-facets" class="facet-list">
+                                        <!-- Date facets will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="search-results-main">
+                            <div id="search-results" class="search-results">
+                                <div class="search-welcome">
+                                    <div class="welcome-icon">
+                                        <i class="fas fa-search-plus"></i>
+                                    </div>
+                                    <h3>Universal Network Search</h3>
+                                    <p>Search across all your network data including devices, configurations, policies, scripts, and logs.</p>
+                                    
+                                    <div class="search-examples">
+                                        <h4>Try searching for:</h4>
+                                        <div class="example-searches">
+                                            <button onclick="searchExample('cisco router')" class="example-search">
+                                                "cisco router"
+                                            </button>
+                                            <button onclick="searchExample('interface down')" class="example-search">
+                                                "interface down"
+                                            </button>
+                                            <button onclick="searchExample('192.168.1')" class="example-search">
+                                                "192.168.1"
+                                            </button>
+                                            <button onclick="searchExample('policy deny')" class="example-search">
+                                                "policy deny"
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="search-pagination" id="search-pagination" style="display: none;">
+                                <!-- Pagination controls -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Config Generator Section -->
+            <section id="config-ai" class="content-section">
+                <div class="config-generator">
+                    <h2>AI Configuration Generator</h2>
+                    <p>Generate network device configurations using AI and vendor documentation</p>
+
+                    <div class="config-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vendor">Vendor:</label>
+                                <select id="vendor">
+                                    <option value="">Select Vendor</option>
+                                    <option value="cisco">Cisco</option>
+                                    <option value="fortinet">Fortinet</option>
+                                    <option value="paloalto">Palo Alto</option>
+                                    <option value="checkpoint">CheckPoint</option>
+                                    <option value="juniper">Juniper</option>
+                                    <option value="arista">Arista</option>
+                                    <option value="ubiquiti">Ubiquiti</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="deviceType">Device Type:</label>
+                                <select id="deviceType">
+                                    <option value="">Select Type</option>
+                                    <option value="router">Router</option>
+                                    <option value="switch">Switch</option>
+                                    <option value="firewall">Firewall</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="hostname">Hostname:</label>
+                                <input type="text" id="hostname" placeholder="Device01">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="configInterfaces">Interfaces (one per line):</label>
+                                <textarea id="configInterfaces" placeholder="192.168.1.1 255.255.255.0&#10;10.0.1.1 255.255.255.0"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="vlans">VLANs (comma-separated):</label>
+                                <input type="text" id="vlans" placeholder="10,20,30">
+                            </div>
+                        </div>
+
+                        <button id="generateConfig" class="btn-primary">Generate Configuration</button>
+                    </div>
+
+                    <div id="configResult" class="config-result" style="display: none;">
+                        <h3>Generated Configuration</h3>
+                        <div class="config-actions">
+                            <button onclick="copyConfig()" class="btn-secondary">Copy to Clipboard</button>
+                            <button onclick="downloadConfig()" class="btn-secondary">Download</button>
+                        </div>
+                        <pre id="configOutput"></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Chat Assistant Section -->
+            <section id="chat" class="content-section">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <h2><i class="fas fa-robot"></i> Network AI Assistant</h2>
+                        <div class="chat-actions">
+                            <button onclick="clearChat()" class="btn-secondary">Clear Chat</button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot-message">
+                            <div class="message-content">
+                                <p>Hello! I'm your Network AI Assistant. I can help you with:</p>
+                                <ul>
+                                    <li>🔧 Configuration generation and troubleshooting</li>
+                                    <li>🔍 Searching vendor documentation</li>
+                                    <li>🛡️ Firewall policy recommendations</li>
+                                    <li>📊 Interface monitoring and diagnostics</li>
+                                    <li>📚 Best practices and guidance</li>
+                                </ul>
+                                <p>What would you like help with today?</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="Ask me anything about networking...">
+                        <button id="sendChat" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- N8N Workflows Section -->
+            <section id="n8n-workflows" class="content-section">
+                <div class="n8n-container">
+                    <div class="section-header">
+                        <h2>N8N Workflow Automation</h2>
+                        <div class="workflow-actions">
+                            <button onclick="openN8nConfig()" class="btn-secondary">
+                                <i class="fas fa-cog"></i> Configure
+                            </button>
+                            <button onclick="testN8nConnection()" class="btn-secondary">
+                                <i class="fas fa-plug"></i> Test Connection
+                            </button>
+                            <button onclick="refreshWorkflows()" class="btn-secondary">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                            <button onclick="openWorkflowEditor()" class="btn-primary">
+                                <i class="fas fa-plus"></i> New Workflow
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Connection Status -->
+                    <div class="connection-status" id="n8n-connection-status">
+                        <div class="status-indicator">
+                            <span class="status-dot offline"></span>
+                            <span>N8N Connection Status: Disconnected</span>
+                        </div>
+                        <div class="connection-details">
+                            <span id="n8n-connection-details">Click "Test Connection" to check N8N status</span>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Statistics -->
+                    <div class="workflow-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="total-workflows">0</h3>
+                                <p>Total Workflows</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="active-workflows">0</h3>
+                                <p>Active Workflows</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="recent-executions">0</h3>
+                                <p>Recent Executions</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="success-rate">0%</h3>
+                                <p>Success Rate</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Management Tabs -->
+                    <div class="workflow-tabs">
+                        <div class="tab-nav">
+                            <button class="tab-btn active" data-tab="workflows">Workflows</button>
+                            <button class="tab-btn" data-tab="templates">Templates</button>
+                            <button class="tab-btn" data-tab="executions">Executions</button>
+                            <button class="tab-btn" data-tab="triggers">Event Triggers</button>
+                        </div>
+
+                        <!-- Workflows Tab -->
+                        <div id="workflows" class="tab-content active">
+                            <div class="workflows-header">
+                                <h3>Active Workflows</h3>
+                                <div class="workflow-filters">
+                                    <input type="text" id="workflow-search" placeholder="Search workflows..." onkeyup="filterWorkflows()">
+                                    <select id="workflow-status-filter" onchange="filterWorkflows()">
+                                        <option value="">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="workflows-list" class="workflows-list">
+                                <div class="empty-state">
+                                    No workflows found. Create your first workflow or deploy a template.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Templates Tab -->
+                        <div id="templates" class="tab-content">
+                            <div class="templates-header">
+                                <h3>Network Workflow Templates</h3>
+                                <p>Pre-built workflow templates for common network automation tasks</p>
+                            </div>
+                            <div class="templates-grid">
+                                <div class="template-card" data-template="device-health-monitor">
+                                    <div class="template-icon">
+                                        <i class="fas fa-heartbeat"></i>
+                                    </div>
+                                    <h4>Device Health Monitor</h4>
+                                    <p>Monitor network device health and send alerts when issues are detected</p>
+                                    <div class="template-actions">
+                                        <button onclick="deployTemplate('device-health-monitor')" class="btn-primary">
+                                            <i class="fas fa-download"></i> Deploy
+                                        </button>
+                                        <button onclick="previewTemplate('device-health-monitor')" class="btn-secondary">
+                                            <i class="fas fa-eye"></i> Preview
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="template-card" data-template="interface-monitoring">
+                                    <div class="template-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <h4>Interface Utilization Monitor</h4>
+                                    <p>Monitor interface utilization and trigger alerts for high usage</p>
+                                    <div class="template-actions">
+                                        <button onclick="deployTemplate('interface-monitoring')" class="btn-primary">
+                                            <i class="fas fa-download"></i> Deploy
+                                        </button>
+                                        <button onclick="previewTemplate('interface-monitoring')" class="btn-secondary">
+                                            <i class="fas fa-eye"></i> Preview
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="template-card" data-template="topology-change-detector">
+                                    <div class="template-icon">
+                                        <i class="fas fa-network-wired"></i>
+                                    </div>
+                                    <h4>Topology Change Detector</h4>
+                                    <p>Detect network topology changes and log them for analysis</p>
+                                    <div class="template-actions">
+                                        <button onclick="deployTemplate('topology-change-detector')" class="btn-primary">
+                                            <i class="fas fa-download"></i> Deploy
+                                        </button>
+                                        <button onclick="previewTemplate('topology-change-detector')" class="btn-secondary">
+                                            <i class="fas fa-eye"></i> Preview
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="template-card" data-template="automated-backup">
+                                    <div class="template-icon">
+                                        <i class="fas fa-save"></i>
+                                    </div>
+                                    <h4>Automated Configuration Backup</h4>
+                                    <p>Automatically backup device configurations on schedule</p>
+                                    <div class="template-actions">
+                                        <button onclick="deployTemplate('automated-backup')" class="btn-primary">
+                                            <i class="fas fa-download"></i> Deploy
+                                        </button>
+                                        <button onclick="previewTemplate('automated-backup')" class="btn-secondary">
+                                            <i class="fas fa-eye"></i> Preview
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Executions Tab -->
+                        <div id="executions" class="tab-content">
+                            <div class="executions-header">
+                                <h3>Workflow Executions</h3>
+                                <div class="execution-filters">
+                                    <select id="execution-status-filter" onchange="filterExecutions()">
+                                        <option value="">All Status</option>
+                                        <option value="success">Success</option>
+                                        <option value="error">Error</option>
+                                        <option value="running">Running</option>
+                                    </select>
+                                    <input type="date" id="execution-date-filter" onchange="filterExecutions()">
+                                </div>
+                            </div>
+                            <div id="executions-list" class="executions-list">
+                                <div class="empty-state">
+                                    No executions found. Execute a workflow to see results here.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Event Triggers Tab -->
+                        <div id="triggers" class="tab-content">
+                            <div class="triggers-header">
+                                <h3>Event Triggers</h3>
+                                <p>Configure automatic workflow execution based on network events</p>
+                            </div>
+                            <div class="triggers-config">
+                                <div class="trigger-item">
+                                    <div class="trigger-info">
+                                        <h4>Device Down Events</h4>
+                                        <p>Trigger workflows when devices become unreachable</p>
+                                    </div>
+                                    <div class="trigger-control">
+                                        <label class="switch">
+                                            <input type="checkbox" id="device-down-trigger" onchange="toggleEventTrigger('device_down', this.checked)">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="trigger-item">
+                                    <div class="trigger-info">
+                                        <h4>High Utilization Events</h4>
+                                        <p>Trigger workflows when interface utilization exceeds thresholds</p>
+                                    </div>
+                                    <div class="trigger-control">
+                                        <label class="switch">
+                                            <input type="checkbox" id="high-utilization-trigger" onchange="toggleEventTrigger('high_utilization', this.checked)">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="trigger-item">
+                                    <div class="trigger-info">
+                                        <h4>Topology Changes</h4>
+                                        <p>Trigger workflows when network topology changes are detected</p>
+                                    </div>
+                                    <div class="trigger-control">
+                                        <label class="switch">
+                                            <input type="checkbox" id="topology-change-trigger" onchange="toggleEventTrigger('topology_change', this.checked)">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="trigger-item">
+                                    <div class="trigger-info">
+                                        <h4>Configuration Changes</h4>
+                                        <p>Trigger workflows when device configurations are modified</p>
+                                    </div>
+                                    <div class="trigger-control">
+                                        <label class="switch">
+                                            <input type="checkbox" id="config-change-trigger" onchange="toggleEventTrigger('config_change', this.checked)">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts" class="content-section">
+                <div class="alerts-container">
+                    <div class="section-header">
+                        <h2>Security Alerts & Notifications</h2>
+                        <div class="alert-filters">
+                            <select id="severityFilter">
+                                <option value="">All Severities</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            <select id="alertStatusFilter">
+                                <option value="false">Active Only</option>
+                                <option value="">All Alerts</option>
+                                <option value="true">Acknowledged</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="alertsList" class="alerts-container">
+                        <p class="no-data">No alerts to display</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="addDeviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Network Device</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="deviceName">Device Name:</label>
+                    <input type="text" id="deviceName" placeholder="Router-01">
+                </div>
+                <div class="form-group">
+                    <label for="deviceIP">IP Address:</label>
+                    <input type="text" id="deviceIP" placeholder="192.168.1.1">
+                </div>
+                <div class="form-group">
+                    <label for="deviceVendor">Vendor:</label>
+                    <select id="deviceVendor">
+                        <option value="cisco">Cisco</option>
+                        <option value="fortinet">Fortinet</option>
+                        <option value="paloalto">Palo Alto</option>
+                        <option value="checkpoint">CheckPoint</option>
+                        <option value="juniper">Juniper</option>
+                        <option value="arista">Arista</option>
+                        <option value="ubiquiti">Ubiquiti</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="deviceModel">Model:</label>
+                    <input type="text" id="deviceModel" placeholder="ISR4431">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal()" class="btn-secondary">Cancel</button>
+                <button onclick="saveDevice()" class="btn-primary">Add Device</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credentials Modal -->
+    <div id="addCredentialsModal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>Add Network Credentials</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="credentialName">Credential Set Name:</label>
+                    <input type="text" id="credentialName" placeholder="Primary Network Credentials">
+                </div>
+                <div class="form-group">
+                    <label for="credentialDescription">Description:</label>
+                    <textarea id="credentialDescription" placeholder="Description of these credentials" rows="2"></textarea>
+                </div>
+
+                <!-- SSH Credentials -->
+                <div class="credential-section">
+                    <h4>
+                        <label>
+                            <input type="checkbox" id="enableSSHCreds" checked> SSH Credentials
+                        </label>
+                    </h4>
+                    <div class="credential-fields" id="sshFields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="sshUsername">Username:</label>
+                                <input type="text" id="sshUsername" placeholder="admin">
+                            </div>
+                            <div class="form-group">
+                                <label for="sshPassword">Password:</label>
+                                <input type="password" id="sshPassword" placeholder="password">
+                            </div>
+                            <div class="form-group">
+                                <label for="sshPort">Port:</label>
+                                <input type="number" id="sshPort" value="22" min="1" max="65535">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="sshEnablePassword">Enable Password (optional):</label>
+                            <input type="password" id="sshEnablePassword" placeholder="enable password">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telnet Credentials -->
+                <div class="credential-section">
+                    <h4>
+                        <label>
+                            <input type="checkbox" id="enableTelnetCreds"> Telnet Credentials
+                        </label>
+                    </h4>
+                    <div class="credential-fields" id="telnetFields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="telnetUsername">Username:</label>
+                                <input type="text" id="telnetUsername" placeholder="admin">
+                            </div>
+                            <div class="form-group">
+                                <label for="telnetPassword">Password:</label>
+                                <input type="password" id="telnetPassword" placeholder="password">
+                            </div>
+                            <div class="form-group">
+                                <label for="telnetPort">Port:</label>
+                                <input type="number" id="telnetPort" value="23" min="1" max="65535">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="telnetEnablePassword">Enable Password (optional):</label>
+                            <input type="password" id="telnetEnablePassword" placeholder="enable password">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SNMP Credentials -->
+                <div class="credential-section">
+                    <h4>
+                        <label>
+                            <input type="checkbox" id="enableSNMPCreds" checked> SNMP Credentials
+                        </label>
+                    </h4>
+                    <div class="credential-fields" id="snmpFields">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="snmpVersion">SNMP Version:</label>
+                                <select id="snmpVersion">
+                                    <option value="2c">v2c</option>
+                                    <option value="3">v3</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="snmpPort">Port:</label>
+                                <input type="number" id="snmpPort" value="161" min="1" max="65535">
+                            </div>
+                        </div>
+
+                        <!-- SNMP v2c fields -->
+                        <div id="snmpV2cFields">
+                            <div class="form-group">
+                                <label for="snmpCommunity">Community String:</label>
+                                <input type="password" id="snmpCommunity" placeholder="public">
+                            </div>
+                        </div>
+
+                        <!-- SNMP v3 fields -->
+                        <div id="snmpV3Fields" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="snmpV3Username">Username:</label>
+                                    <input type="text" id="snmpV3Username" placeholder="snmpuser">
+                                </div>
+                                <div class="form-group">
+                                    <label for="snmpAuthProtocol">Auth Protocol:</label>
+                                    <select id="snmpAuthProtocol">
+                                        <option value="SHA">SHA</option>
+                                        <option value="MD5">MD5</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="snmpAuthPassword">Auth Password:</label>
+                                    <input type="password" id="snmpAuthPassword" placeholder="auth password">
+                                </div>
+                                <div class="form-group">
+                                    <label for="snmpPrivProtocol">Privacy Protocol:</label>
+                                    <select id="snmpPrivProtocol">
+                                        <option value="AES">AES</option>
+                                        <option value="DES">DES</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="snmpPrivPassword">Privacy Password:</label>
+                                <input type="password" id="snmpPrivPassword" placeholder="privacy password">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="testCredentials()" class="btn-secondary">Test Credentials</button>
+                <button onclick="closeCredentialsModal()" class="btn-secondary">Cancel</button>
+                <button onclick="saveCredentials()" class="btn-primary">Save Credentials</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- N8N Configuration Modal -->
+    <div id="n8nConfigModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>N8N Configuration</h2>
+                <span class="close" onclick="closeN8nConfigModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="config-tabs">
+                    <div class="tab-nav">
+                        <button class="tab-btn active" data-tab="connection">Connection</button>
+                        <button class="tab-btn" data-tab="setup">Setup Guide</button>
+                    </div>
+
+                    <!-- Connection Tab -->
+                    <div id="connection" class="tab-content active">
+                        <form id="n8nConfigForm">
+                            <div class="form-group">
+                                <label for="n8n-base-url">N8N Base URL:</label>
+                                <input type="url" id="n8n-base-url" placeholder="http://localhost:5678" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="n8n-auth-type">Authentication Type:</label>
+                                <select id="n8n-auth-type" onchange="toggleAuthFields()">
+                                    <option value="none">None</option>
+                                    <option value="apikey">API Key</option>
+                                    <option value="basic">Basic Auth</option>
+                                </select>
+                            </div>
+
+                            <div id="api-key-fields" class="auth-fields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="n8n-api-key">API Key:</label>
+                                    <input type="password" id="n8n-api-key" placeholder="Enter your N8N API key">
+                                    <button type="button" class="btn-secondary btn-sm" onclick="togglePasswordVisibility('n8n-api-key')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="basic-auth-fields" class="auth-fields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="n8n-username">Username:</label>
+                                    <input type="text" id="n8n-username" placeholder="Enter username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="n8n-password">Password:</label>
+                                    <input type="password" id="n8n-password" placeholder="Enter password">
+                                    <button type="button" class="btn-secondary btn-sm" onclick="togglePasswordVisibility('n8n-password')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" onclick="testN8nConfigConnection()" class="btn-secondary">
+                                    <i class="fas fa-plug"></i> Test Connection
+                                </button>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-save"></i> Save Configuration
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Setup Guide Tab -->
+                    <div id="setup" class="tab-content">
+                        <div class="setup-guide">
+                            <h3>N8N Setup Instructions</h3>
+                            <div id="setup-steps">
+                                <div class="setup-step">
+                                    <div class="step-number">1</div>
+                                    <div class="step-content">
+                                        <h4>Install N8N</h4>
+                                        <p>Install N8N globally on your system:</p>
+                                        <code>npm install n8n -g</code>
+                                        <button onclick="copyToClipboard('npm install n8n -g')" class="btn-secondary btn-sm">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="setup-step">
+                                    <div class="step-number">2</div>
+                                    <div class="step-content">
+                                        <h4>Start N8N</h4>
+                                        <p>Start the N8N server:</p>
+                                        <code>n8n start</code>
+                                        <button onclick="copyToClipboard('n8n start')" class="btn-secondary btn-sm">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="setup-step">
+                                    <div class="step-number">3</div>
+                                    <div class="step-content">
+                                        <h4>Access N8N Web Interface</h4>
+                                        <p>Open N8N in your browser:</p>
+                                        <a href="http://localhost:5678" target="_blank" class="btn-primary btn-sm">
+                                            <i class="fas fa-external-link-alt"></i> Open N8N
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="setup-step">
+                                    <div class="step-number">4</div>
+                                    <div class="step-content">
+                                        <h4>Generate API Key</h4>
+                                        <p>In N8N web interface:</p>
+                                        <ol>
+                                            <li>Go to Settings → API Keys</li>
+                                            <li>Click "Create API Key"</li>
+                                            <li>Copy the generated API key</li>
+                                            <li>Paste it in the Connection tab</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js?v=2"></script>
+</body>
+</html>

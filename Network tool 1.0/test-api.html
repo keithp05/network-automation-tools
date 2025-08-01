@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API Integration</title>
+</head>
+<body>
+    <h1>API Integration Test</h1>
+    
+    <h2>Test API Connection</h2>
+    <button onclick="testConnection()">Test Arista Connection</button>
+    <div id="result"></div>
+
+    <script>
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/vendor-api/arista/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        host: '192.168.1.100',
+                        port: 443,
+                        username: 'admin',
+                        password: 'admin123',
+                        protocol: 'https'
+                    })
+                });
+                
+                const result = await response.json();
+                resultDiv.innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

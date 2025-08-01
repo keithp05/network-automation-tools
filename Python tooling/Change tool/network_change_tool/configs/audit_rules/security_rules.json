@@ -1,0 +1,114 @@
+{
+  "rules": [
+    {
+      "rule_id": "sec_001",
+      "name": "SSH Version 2 Only",
+      "description": "Ensure SSH version 2 is configured",
+      "command": "show ip ssh",
+      "expected_pattern": "SSH Enabled.*version 2",
+      "severity": "error",
+      "device_types": ["cisco_ios", "cisco_nxos"],
+      "category": "security",
+      "remediation": "Configure SSH version 2: ip ssh version 2"
+    },
+    {
+      "rule_id": "sec_002",
+      "name": "No Default SNMP Communities",
+      "description": "Ensure default SNMP communities are not configured",
+      "command": "show running-config | include snmp-server community",
+      "not_expected_pattern": "snmp-server community (public|private)",
+      "severity": "critical",
+      "device_types": ["cisco_ios", "cisco_nxos", "cisco_asa"],
+      "category": "security",
+      "remediation": "Remove default SNMP communities and configure secure community strings"
+    },
+    {
+      "rule_id": "sec_003",
+      "name": "Enable Password Configured",
+      "description": "Ensure enable password is configured",
+      "command": "show running-config | include enable",
+      "expected_pattern": "enable (secret|password)",
+      "severity": "error",
+      "device_types": ["cisco_ios", "cisco_nxos", "cisco_asa"],
+      "category": "security",
+      "remediation": "Configure enable secret: enable secret <password>"
+    },
+    {
+      "rule_id": "sec_004",
+      "name": "AAA Authentication",
+      "description": "Ensure AAA authentication is configured",
+      "command": "show running-config | include aaa authentication",
+      "expected_pattern": "aaa authentication",
+      "severity": "warning",
+      "device_types": ["cisco_ios", "cisco_nxos"],
+      "category": "security",
+      "remediation": "Configure AAA authentication: aaa authentication login default group tacacs+ local"
+    },
+    {
+      "rule_id": "sec_005",
+      "name": "Console Timeout",
+      "description": "Ensure console timeout is configured",
+      "command": "show running-config | section line con 0",
+      "expected_pattern": "exec-timeout",
+      "severity": "warning",
+      "device_types": ["cisco_ios", "cisco_nxos"],
+      "category": "security",
+      "remediation": "Configure console timeout: line con 0; exec-timeout 10 0"
+    },
+    {
+      "rule_id": "sec_006",
+      "name": "VTY Access Control",
+      "description": "Ensure VTY lines have access control",
+      "command": "show running-config | section line vty",
+      "expected_pattern": "access-class",
+      "severity": "warning",
+      "device_types": ["cisco_ios", "cisco_nxos"],
+      "category": "security",
+      "remediation": "Configure VTY access control: line vty 0 4; access-class <acl-number> in"
+    },
+    {
+      "rule_id": "sec_007",
+      "name": "Security Policies Configured",
+      "description": "Ensure security policies are configured",
+      "command": "<show><running><security><rules></rules></security></running></show>",
+      "expected_pattern": "<rules>",
+      "severity": "critical",
+      "device_types": ["paloalto_panos"],
+      "category": "security",
+      "remediation": "Configure security policies in the device management interface"
+    },
+    {
+      "rule_id": "sec_008",
+      "name": "Threat Prevention Profiles",
+      "description": "Ensure threat prevention profiles are configured",
+      "command": "<show><running><profiles><virus></virus></profiles></running></show>",
+      "expected_pattern": "<virus>",
+      "severity": "warning",
+      "device_types": ["paloalto_panos"],
+      "category": "security",
+      "remediation": "Configure threat prevention profiles"
+    },
+    {
+      "rule_id": "sec_009",
+      "name": "Management Access Restrictions",
+      "description": "Ensure management access is restricted",
+      "command": "<show><running><deviceconfig><system><permitted-ip></permitted-ip></system></deviceconfig></running></show>",
+      "expected_pattern": "<permitted-ip>",
+      "severity": "warning",
+      "device_types": ["paloalto_panos"],
+      "category": "security",
+      "remediation": "Configure management access restrictions"
+    },
+    {
+      "rule_id": "sec_010",
+      "name": "Password Encryption",
+      "description": "Ensure password encryption is enabled",
+      "command": "show running-config | include service password-encryption",
+      "expected_pattern": "service password-encryption",
+      "severity": "warning",
+      "device_types": ["cisco_ios", "cisco_nxos"],
+      "category": "security",
+      "remediation": "Enable password encryption: service password-encryption"
+    }
+  ]
+}
