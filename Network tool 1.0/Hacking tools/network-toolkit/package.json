@@ -1,0 +1,28 @@
+{
+  "name": "network-toolkit",
+  "version": "1.0.0",
+  "description": "Comprehensive network engineering toolkit with penetration testing capabilities",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "backend/*",
+    "shared"
+  ],
+  "scripts": {
+    "mobile": "cd mobile && npm start",
+    "backend": "cd backend && npm run dev",
+    "install:all": "npm install && cd mobile && npm install && cd ../backend/api-gateway && npm install",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "keywords": [
+    "network",
+    "engineering",
+    "security",
+    "penetration-testing",
+    "monitoring"
+  ],
+  "author": "Network Toolkit Team",
+  "license": "MIT"
+}

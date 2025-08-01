@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Discovery Tool</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 Network Discovery Tool</h1>
+            <p>Discover and analyze your network infrastructure</p>
+        </header>
+
+        <div class="controls">
+            <div class="input-group">
+                <label for="subnet">Subnet to scan:</label>
+                <input type="text" id="subnet" placeholder="192.168.200" value="192.168.200">
+                <button id="startScan" class="btn-primary">Start Scan</button>
+                <button id="stopScan" class="btn-secondary" disabled>Stop Scan</button>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div id="statusMessage">Ready to scan</div>
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="results">
+            <!-- Network Interfaces -->
+            <div class="card">
+                <h2>🖧 Network Interfaces</h2>
+                <div id="interfaces" class="content">
+                    <p class="placeholder">No interfaces discovered yet</p>
+                </div>
+            </div>
+
+            <!-- Active Hosts -->
+            <div class="card">
+                <h2>🟢 Active Hosts</h2>
+                <div id="activeHosts" class="content">
+                    <p class="placeholder">No active hosts found yet</p>
+                </div>
+            </div>
+
+            <!-- Open Ports -->
+            <div class="card">
+                <h2>🔓 Open Ports</h2>
+                <div id="openPorts" class="content">
+                    <p class="placeholder">No open ports discovered yet</p>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="card">
+                <h2>📊 Scan Summary</h2>
+                <div id="summary" class="content">
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="stat-value" id="totalInterfaces">0</span>
+                            <span class="stat-label">Interfaces</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value" id="totalHosts">0</span>
+                            <span class="stat-label">Active Hosts</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value" id="totalPorts">0</span>
+                            <span class="stat-label">Open Ports</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="logs">
+            <div class="card">
+                <h2>📝 Scan Logs</h2>
+                <div id="logs" class="content log-content">
+                    <p class="log-entry">Tool initialized and ready</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

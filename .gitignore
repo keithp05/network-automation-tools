@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Sensitive network data - ALL PROJECTS
+**/logs/
+**/audits/
+**/backups/
+**/push_results/
+**/*.log
+**/*.cfg
+**/*.backup
+
+# Device lists with real IPs/credentials
+**/devices.txt
+**/production_devices.txt
+**/*_devices.txt
+**/inventory.txt
+**/hosts.txt
+
+# Credentials and config files
+**/credentials.txt
+**/config.ini
+**/.env
+**/*.key
+**/*.pem
+**/*password*
+**/*secret*
+
+# Network configurations (real ones)
+**/running-config*
+**/startup-config*
+**/*.conf
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+# Large files
+**/*.dmg
+**/*.iso
+**/*.zip
+**/*.tar
+**/*.pkg
+**/*.app
+**/node_modules/
+# Large files
+**/*.zip
+**/*.tar.gz
+**/*.pdf
+# Large files
+**/*.zip
+**/*.tar.gz
+**/*.pdf
+**/*.txt
+**/converted_texts/
+# Documentation with potential false positive secrets
+**/converted_texts/
+**/*Administration_Guide*
+**/*admin*guide*.txt

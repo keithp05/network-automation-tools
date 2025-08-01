@@ -1,0 +1,15 @@
+hostname,ip_address,device_type,port,location,role
+core-switch-01,192.168.1.10,cisco_ios,22,datacenter,core
+core-switch-02,192.168.1.11,cisco_ios,22,datacenter,core
+core-switch-03,192.168.1.12,cisco_ios,22,datacenter,core
+nexus-switch-01,192.168.1.15,cisco_nxos,22,datacenter,aggregation
+nexus-switch-02,192.168.1.16,cisco_nxos,22,datacenter,aggregation
+access-switch-01,192.168.2.10,cisco_ios,22,floor1,access
+access-switch-02,192.168.2.11,cisco_ios,22,floor2,access
+access-switch-03,192.168.2.12,cisco_ios,22,floor3,access
+asa-firewall-01,192.168.1.20,cisco_asa,22,datacenter,security
+asa-firewall-02,192.168.1.21,cisco_asa,22,datacenter,security
+palo-firewall-01,192.168.1.25,paloalto_panos,443,datacenter,security
+palo-firewall-02,192.168.1.26,paloalto_panos,443,datacenter,security
+router-01,192.168.1.30,cisco_ios,22,datacenter,gateway
+router-02,192.168.1.31,cisco_ios,22,datacenter,gateway

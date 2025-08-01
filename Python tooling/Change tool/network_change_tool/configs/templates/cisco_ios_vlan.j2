@@ -1,0 +1,28 @@
+# Cisco IOS VLAN Configuration Template
+# Variables: vlan_id, vlan_name, vlan_description, interface_list
+
+# Create VLAN
+vlan {{ vlan_id }}
+ name {{ vlan_name }}
+ description {{ vlan_description }}
+ exit
+
+# Configure interfaces
+{% for interface in interface_list %}
+interface {{ interface.name }}
+ description {{ interface.description }}
+ switchport mode {{ interface.mode }}
+ {% if interface.mode == 'access' %}
+ switchport access vlan {{ vlan_id }}
+ {% elif interface.mode == 'trunk' %}
+ switchport trunk allowed vlan add {{ vlan_id }}
+ {% endif %}
+ {% if interface.spanning_tree_portfast %}
+ spanning-tree portfast
+ {% endif %}
+ no shutdown
+ exit
+{% endfor %}
+
+# Save configuration
+copy running-config startup-config

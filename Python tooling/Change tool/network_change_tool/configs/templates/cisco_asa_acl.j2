@@ -1,0 +1,15 @@
+# Cisco ASA Access Control List Template
+# Variables: acl_name, rules
+
+# Create or modify access list
+{% for rule in rules %}
+access-list {{ acl_name }} {{ rule.action }} {{ rule.protocol }} {{ rule.source }} {{ rule.destination }} {% if rule.port %}{{ rule.port }}{% endif %}
+{% endfor %}
+
+# Apply access list to interface
+{% if interface and direction %}
+access-group {{ acl_name }} {{ direction }} interface {{ interface }}
+{% endif %}
+
+# Save configuration
+write memory

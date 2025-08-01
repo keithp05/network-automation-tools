@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Sensitive Cisco data - DO NOT COMMIT
+logs/
+audits/
+backups/
+push_results/
+*.log
+*.cfg
+
+# Device lists with real IPs
+devices.txt
+production_devices.txt
+
+# Credentials
+credentials.txt
+config.ini
+.env
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Management - Greenhouse System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c5530 0%, #4a7c59 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2c5530;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #2c5530;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .form-control select {
+            background: white;
+        }
+
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .camera-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .camera-card:hover {
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+        }
+
+        .camera-card.online {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .camera-card.offline {
+            border-left: 4px solid #f44336;
+        }
+
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .camera-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c5530;
+        }
+
+        .camera-status {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-online {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-offline {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .camera-info {
+            margin-bottom: 15px;
+        }
+
+        .camera-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .camera-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .camera-actions .btn {
+            flex: 1;
+            min-width: 80px;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #2c5530;
+            margin: 0;
+        }
+
+        .close {
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            border-bottom-color: #4CAF50;
+            color: #4CAF50;
+            font-weight: 500;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ff9800;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .camera-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📹 Camera Management</h1>
+            <div class="nav-buttons">
+                <a href="/dashboard" class="nav-btn">🏡 Dashboard</a>
+                <a href="/ai-identification" class="nav-btn">🤖 AI Analysis</a>
+                <a href="/growth-tracker" class="nav-btn">📈 Growth Tracker</a>
+                <a href="/planner" class="nav-btn">🌱 Planner</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="card">
+                    <h2>📊 Camera Statistics</h2>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalCameras">0</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="onlineCameras">0</div>
+                            <div class="stat-label">Online</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="offlineCameras">0</div>
+                            <div class="stat-label">Offline</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🔧 Quick Actions</h2>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <button class="btn btn-primary" onclick="showAddCameraModal()">
+                            ➕ Add Camera
+                        </button>
+                        <button class="btn btn-secondary" onclick="showUniFiDiscoveryModal()">
+                            🔍 Discover UniFi
+                        </button>
+                        <button class="btn btn-secondary" onclick="refreshCameras()">
+                            🔄 Refresh All
+                        </button>
+                        <button class="btn btn-secondary" onclick="bulkCapture()">
+                            📸 Bulk Capture
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>⚙️ Settings</h2>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="autoRefresh"> Auto-refresh (30s)
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="showOffline"> Show offline cameras
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="viewMode">View Mode:</label>
+                        <select id="viewMode" class="form-control">
+                            <option value="grid">Grid View</option>
+                            <option value="list">List View</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>📱 Cameras</h2>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search cameras..." style="width: 200px;">
+                            <select id="filterProvider" class="form-control" style="width: 150px;">
+                                <option value="">All Providers</option>
+                                <option value="ubiquiti_unifi">UniFi Protect</option>
+                                <option value="rtsp_generic">RTSP Generic</option>
+                                <option value="ip_camera">IP Camera</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="cameraList" class="camera-grid">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading cameras...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Camera Modal -->
+    <div id="addCameraModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Camera</h3>
+                <span class="close" onclick="closeModal('addCameraModal')">&times;</span>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('manual-tab')">Manual Setup</div>
+                <div class="tab" onclick="switchTab('unifi-tab')">UniFi Protect</div>
+            </div>
+
+            <div id="manual-tab" class="tab-content active">
+                <form id="addCameraForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cameraName">Camera Name *</label>
+                            <input type="text" id="cameraName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="providerType">Provider Type *</label>
+                            <select id="providerType" class="form-control" required>
+                                <option value="">Select Provider</option>
+                                <option value="rtsp_generic">RTSP Generic</option>
+                                <option value="http_mjpeg">HTTP MJPEG</option>
+                                <option value="ip_camera">IP Camera</option>
+                                <option value="usb_webcam">USB Webcam</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cameraDescription">Description</label>
+                        <input type="text" id="cameraDescription" class="form-control" placeholder="Optional description">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="streamUrl">Stream URL *</label>
+                        <input type="url" id="streamUrl" class="form-control" placeholder="rtsp://camera-ip:554/stream" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="locationX">Position X</label>
+                            <input type="number" id="locationX" class="form-control" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="locationY">Position Y</label>
+                            <input type="number" id="locationY" class="form-control" value="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="direction">Direction</label>
+                        <select id="direction" class="form-control">
+                            <option value="">Select Direction</option>
+                            <option value="north">North</option>
+                            <option value="south">South</option>
+                            <option value="east">East</option>
+                            <option value="west">West</option>
+                            <option value="up">Up</option>
+                            <option value="down">Down</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Camera Settings</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="autoCapture" checked>
+                                <label for="autoCapture">Auto Capture</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="motionCapture" checked>
+                                <label for="motionCapture">Motion Detection</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="aiAnalysis" checked>
+                                <label for="aiAnalysis">AI Analysis</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="alertOnMotion">
+                                <label for="alertOnMotion">Alert on Motion</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addCameraModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Camera</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="unifi-tab" class="tab-content">
+                <form id="unifiCameraForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="unifiHost">UniFi Host/IP *</label>
+                            <input type="text" id="unifiHost" class="form-control" placeholder="192.168.1.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="unifiPort">Port</label>
+                            <input type="number" id="unifiPort" class="form-control" value="443">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="unifiUsername">Username *</label>
+                            <input type="text" id="unifiUsername" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="unifiPassword">Password *</label>
+                            <input type="password" id="unifiPassword" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="verifySsl">
+                            <label for="verifySsl">Verify SSL Certificate</label>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addCameraModal')">Cancel</button>
+                        <button type="button" class="btn btn-secondary" onclick="testUniFiConnection()">Test Connection</button>
+                        <button type="submit" class="btn btn-primary">Discover Cameras</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- UniFi Discovery Modal -->
+    <div id="unifiDiscoveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">UniFi Camera Discovery</h3>
+                <span class="close" onclick="closeModal('unifiDiscoveryModal')">&times;</span>
+            </div>
+            
+            <div id="discoveryContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Discovering cameras...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let cameras = [];
+        let authToken = localStorage.getItem('authToken');
+        let autoRefreshInterval = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            loadCameras();
+            setupEventListeners();
+        });
+
+        function checkAuthentication() {
+            if (!authToken) {
+                window.location.href = '/';
+                return;
+            }
+
+            // Verify token is still valid
+            fetch('/api/auth/check-auth', {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success || !data.authenticated) {
+                    localStorage.removeItem('authToken');
+                    window.location.href = '/';
+                }
+            })
+            .catch(() => {
+                localStorage.removeItem('authToken');
+                window.location.href = '/';
+            });
+        }
+
+        function setupEventListeners() {
+            // Auto-refresh toggle
+            document.getElementById('autoRefresh').addEventListener('change', function() {
+                if (this.checked) {
+                    autoRefreshInterval = setInterval(loadCameras, 30000);
+                } else {
+                    if (autoRefreshInterval) {
+                        clearInterval(autoRefreshInterval);
+                        autoRefreshInterval = null;
+                    }
+                }
+            });
+
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', filterCameras);
+            document.getElementById('filterProvider').addEventListener('change', filterCameras);
+            document.getElementById('showOffline').addEventListener('change', filterCameras);
+            document.getElementById('viewMode').addEventListener('change', function() {
+                const cameraList = document.getElementById('cameraList');
+                if (this.value === 'list') {
+                    cameraList.classList.remove('camera-grid');
+                    cameraList.classList.add('camera-list');
+                } else {
+                    cameraList.classList.remove('camera-list');
+                    cameraList.classList.add('camera-grid');
+                }
+            });
+
+            // Form submissions
+            document.getElementById('addCameraForm').addEventListener('submit', handleAddCamera);
+            document.getElementById('unifiCameraForm').addEventListener('submit', handleUniFiDiscovery);
+        }
+
+        async function loadCameras() {
+            try {
+                const response = await fetch('/api/cameras', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    cameras = data.cameras || [];
+                    updateStatistics(data.total || 0, data.online || 0, data.offline || 0);
+                    renderCameras();
+                } else {
+                    showAlert('Failed to load cameras: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading cameras:', error);
+                showAlert('Failed to load cameras', 'error');
+            }
+        }
+
+        function updateStatistics(total, online, offline) {
+            document.getElementById('totalCameras').textContent = total;
+            document.getElementById('onlineCameras').textContent = online;
+            document.getElementById('offlineCameras').textContent = offline;
+        }
+
+        function renderCameras() {
+            const cameraList = document.getElementById('cameraList');
+            
+            if (cameras.length === 0) {
+                cameraList.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📹</div>
+                        <h3>No cameras found</h3>
+                        <p>Add your first camera to get started with monitoring</p>
+                        <button class="btn btn-primary" onclick="showAddCameraModal()" style="margin-top: 20px;">
+                            ➕ Add Camera
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            cameraList.innerHTML = cameras.map(camera => `
+                <div class="camera-card ${camera.status.isOnline ? 'online' : 'offline'}">
+                    <div class="camera-header">
+                        <div class="camera-name">${camera.name}</div>
+                        <div class="camera-status ${camera.status.isOnline ? 'status-online' : 'status-offline'}">
+                            ${camera.status.isOnline ? '🟢 Online' : '🔴 Offline'}
+                        </div>
+                    </div>
+                    
+                    <div class="camera-info">
+                        <p><strong>Provider:</strong> ${getProviderName(camera.providerType)}</p>
+                        <p><strong>Model:</strong> ${camera.metadata.model || 'Unknown'}</p>
+                        <p><strong>Resolution:</strong> ${camera.metadata.resolution ? 
+                            `${camera.metadata.resolution.width}x${camera.metadata.resolution.height}` : 'Unknown'}</p>
+                        <p><strong>Last Seen:</strong> ${formatDate(camera.status.lastSeen)}</p>
+                        ${camera.description ? `<p><strong>Description:</strong> ${camera.description}</p>` : ''}
+                    </div>
+                    
+                    <div class="camera-actions">
+                        <button class="btn btn-primary" onclick="captureSnapshot('${camera.id}')" 
+                                ${!camera.status.isOnline ? 'disabled' : ''}>
+                            📸 Capture
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewStream('${camera.id}')" 
+                                ${!camera.status.isOnline ? 'disabled' : ''}>
+                            🎥 Stream
+                        </button>
+                        <button class="btn btn-secondary" onclick="editCamera('${camera.id}')">
+                            ✏️ Edit
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteCamera('${camera.id}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterCameras() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const providerFilter = document.getElementById('filterProvider').value;
+            const showOffline = document.getElementById('showOffline').checked;
+
+            let filteredCameras = cameras.filter(camera => {
+                const matchesSearch = camera.name.toLowerCase().includes(searchTerm) ||
+                                    (camera.description && camera.description.toLowerCase().includes(searchTerm));
+                const matchesProvider = !providerFilter || camera.providerType === providerFilter;
+                const matchesStatus = showOffline || camera.status.isOnline;
+
+                return matchesSearch && matchesProvider && matchesStatus;
+            });
+
+            // Temporarily update cameras array for rendering
+            const originalCameras = cameras;
+            cameras = filteredCameras;
+            renderCameras();
+            cameras = originalCameras;
+        }
+
+        function getProviderName(providerType) {
+            const providers = {
+                'ubiquiti_unifi': 'UniFi Protect',
+                'rtsp_generic': 'RTSP Generic',
+                'http_mjpeg': 'HTTP MJPEG',
+                'ip_camera': 'IP Camera',
+                'usb_webcam': 'USB Webcam'
+            };
+            return providers[providerType] || providerType;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+
+        function showAddCameraModal() {
+            document.getElementById('addCameraModal').style.display = 'block';
+        }
+
+        function showUniFiDiscoveryModal() {
+            document.getElementById('unifiDiscoveryModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function switchTab(tabId) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // Add active class to clicked tab and corresponding content
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        async function handleAddCamera(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('cameraName').value,
+                providerType: document.getElementById('providerType').value,
+                description: document.getElementById('cameraDescription').value,
+                streamUrl: document.getElementById('streamUrl').value,
+                location: {
+                    position: {
+                        x: parseInt(document.getElementById('locationX').value) || 0,
+                        y: parseInt(document.getElementById('locationY').value) || 0
+                    },
+                    direction: document.getElementById('direction').value || undefined
+                },
+                settings: {
+                    autoCapture: document.getElementById('autoCapture').checked,
+                    motionCapture: document.getElementById('motionCapture').checked,
+                    aiAnalysis: document.getElementById('aiAnalysis').checked,
+                    alertOnMotion: document.getElementById('alertOnMotion').checked
+                }
+            };
+
+            try {
+                const response = await fetch('/api/cameras', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Camera added successfully!', 'success');
+                    closeModal('addCameraModal');
+                    document.getElementById('addCameraForm').reset();
+                    loadCameras();
+                } else {
+                    showAlert('Failed to add camera: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error adding camera:', error);
+                showAlert('Failed to add camera', 'error');
+            }
+        }
+
+        async function handleUniFiDiscovery(event) {
+            event.preventDefault();
+            
+            const unifiConfig = {
+                host: document.getElementById('unifiHost').value,
+                port: parseInt(document.getElementById('unifiPort').value) || 443,
+                username: document.getElementById('unifiUsername').value,
+                password: document.getElementById('unifiPassword').value,
+                verifySsl: document.getElementById('verifySsl').checked
+            };
+
+            closeModal('addCameraModal');
+            showUniFiDiscoveryModal();
+
+            try {
+                const response = await fetch('/api/unifi/discover', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(unifiConfig)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDiscoveredCameras(data.cameras);
+                } else {
+                    document.getElementById('discoveryContent').innerHTML = `
+                        <div class="alert alert-error">
+                            Failed to discover cameras: ${data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error discovering cameras:', error);
+                document.getElementById('discoveryContent').innerHTML = `
+                    <div class="alert alert-error">
+                        Failed to discover cameras
+                    </div>
+                `;
+            }
+        }
+
+        function displayDiscoveredCameras(discoveredCameras) {
+            if (discoveredCameras.length === 0) {
+                document.getElementById('discoveryContent').innerHTML = `
+                    <div class="alert alert-warning">
+                        No cameras found on the UniFi Protect system.
+                    </div>
+                `;
+                return;
+            }
+
+            const content = `
+                <div class="alert alert-success">
+                    Found ${discoveredCameras.length} camera(s). Select which ones to add:
+                </div>
+                
+                <div style="max-height: 400px; overflow-y: auto;">
+                    ${discoveredCameras.map((camera, index) => `
+                        <div style="display: flex; align-items: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px;">
+                            <input type="checkbox" id="camera_${index}" checked style="margin-right: 15px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 5px;">${camera.name}</div>
+                                <div style="font-size: 14px; color: #666;">
+                                    ${camera.description} • ${camera.metadata.model}
+                                </div>
+                                <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                    Resolution: ${camera.metadata.resolution.width}x${camera.metadata.resolution.height}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="camera-status status-online">🟢 Online</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="closeModal('unifiDiscoveryModal')">Cancel</button>
+                    <button class="btn btn-primary" onclick="addSelectedCameras(${JSON.stringify(discoveredCameras).replace(/"/g, '&quot;')})">
+                        Add Selected Cameras
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('discoveryContent').innerHTML = content;
+        }
+
+        async function addSelectedCameras(discoveredCameras) {
+            const selectedCameras = [];
+            
+            discoveredCameras.forEach((camera, index) => {
+                const checkbox = document.getElementById(`camera_${index}`);
+                if (checkbox && checkbox.checked) {
+                    selectedCameras.push({
+                        ...camera,
+                        providerType: 'ubiquiti_unifi'
+                    });
+                }
+            });
+
+            if (selectedCameras.length === 0) {
+                showAlert('No cameras selected', 'warning');
+                return;
+            }
+
+            let addedCount = 0;
+            let errors = [];
+
+            for (const camera of selectedCameras) {
+                try {
+                    const response = await fetch('/api/cameras', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify(camera)
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        addedCount++;
+                    } else {
+                        errors.push(`${camera.name}: ${data.message}`);
+                    }
+                } catch (error) {
+                    errors.push(`${camera.name}: Network error`);
+                }
+            }
+
+            closeModal('unifiDiscoveryModal');
+            
+            if (addedCount > 0) {
+                showAlert(`Successfully added ${addedCount} camera(s)!`, 'success');
+                loadCameras();
+            }
+            
+            if (errors.length > 0) {
+                showAlert(`Some cameras failed to add: ${errors.join(', ')}`, 'error');
+            }
+        }
+
+        async function testUniFiConnection() {
+            const unifiConfig = {
+                host: document.getElementById('unifiHost').value,
+                port: parseInt(document.getElementById('unifiPort').value) || 443,
+                username: document.getElementById('unifiUsername').value,
+                password: document.getElementById('unifiPassword').value,
+                verifySsl: document.getElementById('verifySsl').checked
+            };
+
+            if (!unifiConfig.host || !unifiConfig.username || !unifiConfig.password) {
+                showAlert('Please fill in all required fields', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/unifi/test-connection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(unifiConfig)
+                });
+
+                const data = await response.json();
+                
+                if (data.connected) {
+                    showAlert('Connection successful!', 'success');
+                } else {
+                    showAlert('Connection failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error testing connection:', error);
+                showAlert('Connection test failed', 'error');
+            }
+        }
+
+        async function captureSnapshot(cameraId) {
+            try {
+                const response = await fetch(`/api/cameras/${cameraId}/capture`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        format: 'jpeg',
+                        quality: 90,
+                        timestamp: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Snapshot captured successfully!', 'success');
+                    // You could display the image or trigger AI analysis here
+                } else {
+                    showAlert('Failed to capture snapshot: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error capturing snapshot:', error);
+                showAlert('Failed to capture snapshot', 'error');
+            }
+        }
+
+        function viewStream(cameraId) {
+            // In a real implementation, this would open a stream viewer
+            showAlert('Stream viewer not yet implemented', 'warning');
+        }
+
+        function editCamera(cameraId) {
+            // In a real implementation, this would open an edit modal
+            showAlert('Camera editing not yet implemented', 'warning');
+        }
+
+        async function deleteCamera(cameraId) {
+            if (!confirm('Are you sure you want to delete this camera?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/cameras/${cameraId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Camera deleted successfully!', 'success');
+                    loadCameras();
+                } else {
+                    showAlert('Failed to delete camera: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting camera:', error);
+                showAlert('Failed to delete camera', 'error');
+            }
+        }
+
+        async function refreshCameras() {
+            await loadCameras();
+            showAlert('Cameras refreshed', 'success');
+        }
+
+        async function bulkCapture() {
+            const onlineCameras = cameras.filter(camera => camera.status.isOnline);
+            
+            if (onlineCameras.length === 0) {
+                showAlert('No online cameras available for bulk capture', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/capture/bulk', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        cameraIds: onlineCameras.map(camera => camera.id),
+                        options: {
+                            format: 'jpeg',
+                            quality: 90,
+                            timestamp: true
+                        },
+                        analyze: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const successCount = data.captures ? data.captures.length : 0;
+                    const failCount = data.failed ? data.failed.length : 0;
+                    showAlert(`Bulk capture completed: ${successCount} successful, ${failCount} failed`, 'success');
+                } else {
+                    showAlert('Bulk capture failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error performing bulk capture:', error);
+                showAlert('Bulk capture failed', 'error');
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            // Remove existing alerts
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+
+            // Create new alert
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+
+            // Insert at top of container
+            const container = document.querySelector('.container');
+            container.insertBefore(alert, container.firstChild);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // Handle modal clicks outside content
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

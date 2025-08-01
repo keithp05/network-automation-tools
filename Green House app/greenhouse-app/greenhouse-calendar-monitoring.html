@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greenhouse Calendar & AI Monitoring System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-tab:hover {
+            background: #f8f9fa;
+        }
+        
+        .nav-tab.active {
+            color: #27ae60;
+            border-bottom-color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Calendar Styles */
+        .calendar-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+        
+        .calendar-sidebar {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .calendar-main {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e9ecef;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .calendar-day-header {
+            background: #f8f9fa;
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .calendar-day {
+            background: white;
+            min-height: 100px;
+            padding: 0.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .calendar-day:hover {
+            background: #f8f9fa;
+        }
+        
+        .calendar-day-number {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .calendar-event {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            margin: 0.1rem 0;
+            border-radius: 3px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .event-planting {
+            background: #e8f5e9;
+            color: #27ae60;
+            border-left: 3px solid #27ae60;
+        }
+        
+        .event-harvest {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .event-task {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 3px solid #2196f3;
+        }
+        
+        .crop-selector {
+            margin-bottom: 2rem;
+        }
+        
+        .crop-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .crop-item {
+            padding: 0.75rem;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .crop-item:hover {
+            border-color: #27ae60;
+            background: #f8f9fa;
+        }
+        
+        .crop-item.selected {
+            border-color: #27ae60;
+            background: #e8f5e9;
+        }
+        
+        /* Monitoring Styles */
+        .monitoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .camera-feed {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .camera-header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .camera-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e74c3c;
+        }
+        
+        .status-indicator.active {
+            background: #27ae60;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .camera-view {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .camera-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        
+        .detection-box {
+            position: absolute;
+            border: 2px solid;
+            background: rgba(255,255,255,0.1);
+            pointer-events: all;
+            cursor: pointer;
+        }
+        
+        .detection-box.pest {
+            border-color: #e74c3c;
+        }
+        
+        .detection-box.disease {
+            border-color: #f39c12;
+        }
+        
+        .detection-box.harvest {
+            border-color: #27ae60;
+        }
+        
+        .camera-controls {
+            padding: 1rem;
+            background: #f8f9fa;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .analysis-results {
+            padding: 1rem;
+        }
+        
+        .analysis-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .health-score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .health-score.warning {
+            color: #f39c12;
+        }
+        
+        .health-score.critical {
+            color: #e74c3c;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #27ae60;
+            transition: width 0.3s ease;
+        }
+        
+        /* Alert Styles */
+        .alerts-panel {
+            position: fixed;
+            right: 20px;
+            top: 120px;
+            width: 350px;
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .alert-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .alert-item.info {
+            border-left-color: #2196f3;
+        }
+        
+        .alert-item.warning {
+            border-left-color: #ff9800;
+        }
+        
+        .alert-item.critical {
+            border-left-color: #e74c3c;
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .alert-close {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #999;
+        }
+        
+        .alert-close:hover {
+            color: #333;
+        }
+        
+        /* Time-lapse Styles */
+        .timelapse-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .timelapse-player {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #000;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .timelapse-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .growth-chart {
+            margin-top: 2rem;
+            height: 300px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 1rem;
+        }
+        
+        /* Utility Classes */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #229954;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .badge-success {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27ae60;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>🌱 Greenhouse Smart Management</h1>
+                <p>AI-Powered Calendar & Monitoring System</p>
+            </div>
+            <div id="alertCount" class="badge badge-danger" style="display: none;">
+                0 Alerts
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="switchTab('calendar')">
+            📅 Planting Calendar
+        </div>
+        <div class="nav-tab" onclick="switchTab('monitoring')">
+            📸 AI Monitoring
+        </div>
+        <div class="nav-tab" onclick="switchTab('timelapse')">
+            🎬 Time-lapse
+        </div>
+        <div class="nav-tab" onclick="switchTab('analytics')">
+            📊 Analytics
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Calendar Tab -->
+        <div id="calendar-tab" class="tab-content active">
+            <div class="calendar-container">
+                <div class="calendar-sidebar">
+                    <h3>Crop Selection</h3>
+                    <div class="form-group">
+                        <label>Climate Zone</label>
+                        <select id="climateZone">
+                            <option value="6b">6b (-5 to 0°F)</option>
+                            <option value="7a">7a (0 to 5°F)</option>
+                            <option value="8a">8a (10 to 15°F)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="crop-selector">
+                        <h4>Available Crops</h4>
+                        <div class="crop-list">
+                            <div class="crop-item" onclick="selectCrop('Tomatoes')">
+                                🍅 Tomatoes
+                                <small class="d-block">60-85 days</small>
+                            </div>
+                            <div class="crop-item" onclick="selectCrop('Lettuce')">
+                                🥬 Lettuce
+                                <small class="d-block">30-60 days</small>
+                            </div>
+                            <div class="crop-item" onclick="selectCrop('Peppers')">
+                                🌶️ Peppers
+                                <small class="d-block">60-90 days</small>
+                            </div>
+                            <div class="crop-item" onclick="selectCrop('Cucumbers')">
+                                🥒 Cucumbers
+                                <small class="d-block">50-70 days</small>
+                            </div>
+                            <div class="crop-item" onclick="selectCrop('Basil')">
+                                🌿 Basil
+                                <small class="d-block">25-35 days</small>
+                            </div>
+                            <div class="crop-item" onclick="selectCrop('Spinach')">
+                                🥬 Spinach
+                                <small class="d-block">30-45 days</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="showPlantingModal()">
+                        + Schedule Planting
+                    </button>
+                </div>
+                
+                <div class="calendar-main">
+                    <div class="calendar-header">
+                        <button class="btn btn-secondary" onclick="changeMonth(-1)">←</button>
+                        <h2 id="currentMonth">December 2024</h2>
+                        <button class="btn btn-secondary" onclick="changeMonth(1)">→</button>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be populated by JavaScript -->
+                    </div>
+                    
+                    <div style="margin-top: 2rem;">
+                        <h3>Legend</h3>
+                        <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+                            <div>
+                                <span class="calendar-event event-planting">Planting</span>
+                            </div>
+                            <div>
+                                <span class="calendar-event event-harvest">Harvest</span>
+                            </div>
+                            <div>
+                                <span class="calendar-event event-task">Task</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monitoring Tab -->
+        <div id="monitoring-tab" class="tab-content">
+            <div class="monitoring-grid">
+                <!-- Camera Feed 1 -->
+                <div class="camera-feed">
+                    <div class="camera-header">
+                        <h3>Bed 1 - Tomatoes</h3>
+                        <div class="camera-status">
+                            <span class="status-indicator active"></span>
+                            <span>Live</span>
+                        </div>
+                    </div>
+                    
+                    <div class="camera-view">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23333' width='640' height='360'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ECamera Feed%3C/text%3E%3C/svg%3E" 
+                             class="camera-image" id="camera1-image">
+                        <div class="camera-overlay" id="camera1-overlay"></div>
+                    </div>
+                    
+                    <div class="camera-controls">
+                        <button class="btn btn-primary btn-sm" onclick="captureImage('camera1')">
+                            📸 Capture
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="analyzeImage('camera1')">
+                            🔍 Analyze
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="toggleTimelapse('camera1')">
+                            🎬 Time-lapse
+                        </button>
+                    </div>
+                    
+                    <div class="analysis-results">
+                        <div class="analysis-section">
+                            <div class="analysis-header">
+                                <h4>Plant Health</h4>
+                                <span class="health-score">85%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="analysis-section">
+                            <h4>Harvest Readiness</h4>
+                            <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
+                                <span>Progress</span>
+                                <span>75%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%; background: #f39c12;"></div>
+                            </div>
+                            <small>Est. 7 days to harvest</small>
+                        </div>
+                        
+                        <div class="analysis-section">
+                            <h4>Detected Issues</h4>
+                            <div class="badge badge-success">No pests detected</div>
+                            <div class="badge badge-success">No diseases detected</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Add more camera feeds as needed -->
+            </div>
+        </div>
+        
+        <!-- Time-lapse Tab -->
+        <div id="timelapse-tab" class="tab-content">
+            <div class="timelapse-container">
+                <h2>Growth Time-lapse</h2>
+                
+                <div class="form-group">
+                    <label>Select Bed & Crop</label>
+                    <select id="timelapseSelect">
+                        <option>Bed 1 - Tomatoes (45 days)</option>
+                        <option>Bed 2 - Lettuce (30 days)</option>
+                    </select>
+                </div>
+                
+                <div class="timelapse-player">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23333' width='640' height='360'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ETime-lapse Player%3C/text%3E%3C/svg%3E" 
+                         style="width: 100%; height: 100%;">
+                </div>
+                
+                <div class="timelapse-controls">
+                    <button class="btn btn-primary">▶ Play</button>
+                    <input type="range" style="flex: 1;" min="0" max="100" value="0">
+                    <span>Day 0 / 45</span>
+                </div>
+                
+                <div class="growth-chart">
+                    <h3>Growth Progress Chart</h3>
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Tab -->
+        <div id="analytics-tab" class="tab-content">
+            <h2>Coming Soon: Advanced Analytics</h2>
+            <p>Growth trends, yield predictions, and optimization recommendations.</p>
+        </div>
+    </div>
+    
+    <!-- Alerts Panel -->
+    <div class="alerts-panel" id="alertsPanel">
+        <!-- Alerts will be populated here -->
+    </div>
+    
+    <!-- Planting Modal -->
+    <div id="plantingModal" class="modal">
+        <div class="modal-content">
+            <h2>Schedule New Planting</h2>
+            
+            <div class="form-group">
+                <label>Crop</label>
+                <select id="modalCrop">
+                    <option>Tomatoes</option>
+                    <option>Lettuce</option>
+                    <option>Peppers</option>
+                    <option>Cucumbers</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Bed Assignment</label>
+                <select id="modalBed">
+                    <option>Bed 1</option>
+                    <option>Bed 2</option>
+                    <option>Bed 3</option>
+                    <option>Bed 4</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Planting Date</label>
+                <input type="date" id="modalDate">
+            </div>
+            
+            <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="modalQuantity" value="10">
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                <button class="btn btn-secondary" onclick="closePlantingModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="savePlanting()">Schedule Planting</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let currentMonth = 11; // December (0-indexed)
+        let currentYear = 2024;
+        let selectedCrop = null;
+        let alerts = [];
+        let cropCalendars = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCalendar();
+            initializeMonitoring();
+            checkForAlerts();
+        });
+        
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Set active nav tab
+            event.target.classList.add('active');
+        }
+        
+        // Calendar functions
+        function renderCalendar() {
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day';
+                grid.appendChild(emptyDay);
+            }
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day';
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'calendar-day-number';
+                dayNumber.textContent = day;
+                dayCell.appendChild(dayNumber);
+                
+                // Add events for this day
+                const events = getEventsForDay(day);
+                events.forEach(event => {
+                    const eventDiv = document.createElement('div');
+                    eventDiv.className = `calendar-event event-${event.type}`;
+                    eventDiv.textContent = event.title;
+                    eventDiv.onclick = () => showEventDetails(event);
+                    dayCell.appendChild(eventDiv);
+                });
+                
+                grid.appendChild(dayCell);
+            }
+        }
+        
+        function getEventsForDay(day) {
+            const events = [];
+            
+            // Mock data - in production, this would come from the backend
+            if (day === 15) {
+                events.push({
+                    type: 'planting',
+                    title: '🍅 Plant Tomatoes',
+                    description: 'Plant tomato seedlings in Bed 1'
+                });
+            }
+            
+            if (day === 20) {
+                events.push({
+                    type: 'task',
+                    title: '💧 Fertilize',
+                    description: 'Apply fertilizer to all beds'
+                });
+            }
+            
+            if (day === 28) {
+                events.push({
+                    type: 'harvest',
+                    title: '🥬 Harvest Lettuce',
+                    description: 'Lettuce ready for harvest in Bed 2'
+                });
+            }
+            
+            return events;
+        }
+        
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+        
+        function selectCrop(cropName) {
+            selectedCrop = cropName;
+            document.querySelectorAll('.crop-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.target.closest('.crop-item').classList.add('selected');
+        }
+        
+        function showPlantingModal() {
+            document.getElementById('plantingModal').style.display = 'block';
+            document.getElementById('modalDate').value = new Date().toISOString().split('T')[0];
+        }
+        
+        function closePlantingModal() {
+            document.getElementById('plantingModal').style.display = 'none';
+        }
+        
+        function savePlanting() {
+            const crop = document.getElementById('modalCrop').value;
+            const bed = document.getElementById('modalBed').value;
+            const date = document.getElementById('modalDate').value;
+            const quantity = document.getElementById('modalQuantity').value;
+            
+            // In production, this would save to the backend
+            console.log('Scheduled planting:', { crop, bed, date, quantity });
+            
+            closePlantingModal();
+            renderCalendar();
+            
+            // Show success alert
+            addAlert({
+                type: 'info',
+                title: 'Planting Scheduled',
+                description: `${quantity} ${crop} scheduled for ${bed} on ${date}`,
+                severity: 'info'
+            });
+        }
+        
+        // Monitoring functions
+        function initializeMonitoring() {
+            // Simulate real-time monitoring updates
+            setInterval(() => {
+                updateMonitoringData();
+            }, 5000);
+        }
+        
+        function updateMonitoringData() {
+            // Simulate random health scores
+            const healthScore = Math.floor(Math.random() * 20) + 75;
+            document.querySelector('.health-score').textContent = healthScore + '%';
+            document.querySelector('.progress-fill').style.width = healthScore + '%';
+            
+            // Check for issues
+            if (healthScore < 80) {
+                addAlert({
+                    type: 'warning',
+                    title: 'Low Plant Health',
+                    description: 'Bed 1 tomatoes showing signs of stress',
+                    severity: 'warning'
+                });
+            }
+        }
+        
+        function captureImage(cameraId) {
+            console.log('Capturing image from', cameraId);
+            // Simulate capture
+            setTimeout(() => {
+                addAlert({
+                    type: 'info',
+                    title: 'Image Captured',
+                    description: 'New image saved for analysis',
+                    severity: 'info'
+                });
+            }, 1000);
+        }
+        
+        function analyzeImage(cameraId) {
+            console.log('Analyzing image from', cameraId);
+            
+            // Simulate AI analysis
+            const analysisResults = {
+                pests: Math.random() > 0.8,
+                disease: Math.random() > 0.9,
+                harvestReady: Math.random() > 0.7
+            };
+            
+            setTimeout(() => {
+                if (analysisResults.pests) {
+                    addAlert({
+                        type: 'critical',
+                        title: 'Pest Detected!',
+                        description: 'Aphids detected on tomato plants in Bed 1',
+                        severity: 'critical',
+                        actions: ['Apply neem oil', 'Introduce ladybugs']
+                    });
+                }
+                
+                if (analysisResults.harvestReady) {
+                    addAlert({
+                        type: 'info',
+                        title: 'Ready for Harvest',
+                        description: 'Tomatoes in Bed 1 are ready for harvest',
+                        severity: 'info'
+                    });
+                }
+            }, 2000);
+        }
+        
+        // Alert system
+        function addAlert(alert) {
+            alert.id = Date.now();
+            alert.timestamp = new Date();
+            alerts.unshift(alert);
+            
+            renderAlerts();
+            updateAlertCount();
+        }
+        
+        function renderAlerts() {
+            const panel = document.getElementById('alertsPanel');
+            panel.innerHTML = alerts.slice(0, 5).map(alert => `
+                <div class="alert-item ${alert.severity}">
+                    <div class="alert-header">
+                        <strong>${alert.title}</strong>
+                        <span class="alert-close" onclick="dismissAlert(${alert.id})">×</span>
+                    </div>
+                    <p>${alert.description}</p>
+                    <small>${formatTime(alert.timestamp)}</small>
+                </div>
+            `).join('');
+        }
+        
+        function dismissAlert(alertId) {
+            alerts = alerts.filter(a => a.id !== alertId);
+            renderAlerts();
+            updateAlertCount();
+        }
+        
+        function updateAlertCount() {
+            const badge = document.getElementById('alertCount');
+            const count = alerts.filter(a => a.severity !== 'info').length;
+            
+            if (count > 0) {
+                badge.style.display = 'block';
+                badge.textContent = `${count} Alert${count > 1 ? 's' : ''}`;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        function checkForAlerts() {
+            // Simulate checking for alerts on load
+            setTimeout(() => {
+                addAlert({
+                    type: 'info',
+                    title: 'System Online',
+                    description: 'All monitoring systems operational',
+                    severity: 'info'
+                });
+            }, 1000);
+        }
+        
+        function formatTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            
+            return date.toLocaleDateString();
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('plantingModal');
+            if (event.target === modal) {
+                closePlantingModal();
+            }
+        }
+    </script>
+</body>
+</html>

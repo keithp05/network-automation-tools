@@ -1,0 +1,10 @@
+{
+  "baseUrl": "http://localhost:5678",
+  "apiKey": null,
+  "username": null,
+  "password": null,
+  "webhookUrl": "http://localhost:3000",
+  "authType": "none",
+  "timeout": 30000,
+  "retryAttempts": 3
+}

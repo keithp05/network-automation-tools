@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Growth Tracker - Greenhouse Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c5530 0%, #4a7c59 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2c5530;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #2c5530;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .measurement-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .input-with-unit {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-with-unit input {
+            flex: 1;
+        }
+
+        .input-with-unit select {
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .submit-btn {
+            grid-column: 1 / -1;
+            padding: 15px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .timeline {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+            min-width: 80px;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-measurements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .measurement-item {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .measurement-value {
+            font-weight: bold;
+            color: #2c5530;
+        }
+
+        .measurement-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .alerts-panel {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: white;
+        }
+
+        .alert-item.info {
+            border-left-color: #2196F3;
+            background: #e3f2fd;
+        }
+
+        .alert-item.warning {
+            border-left-color: #FF9800;
+            background: #fff3e0;
+        }
+
+        .alert-item.critical {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .alert-title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .alert-message {
+            font-size: 13px;
+            color: #555;
+        }
+
+        .clear-all-btn {
+            width: 100%;
+            padding: 10px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .clear-all-btn:hover {
+            background: #d32f2f;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .photo-upload {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .photo-upload:hover {
+            border-color: #4CAF50;
+            background: #f8f9fa;
+        }
+
+        .photo-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .milestone-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .milestone-item.achieved {
+            background: #e8f5e8;
+        }
+
+        .milestone-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .milestone-icon.achieved {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .milestone-icon.pending {
+            background: #ddd;
+            color: #666;
+        }
+
+        .milestone-content {
+            flex: 1;
+        }
+
+        .milestone-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .milestone-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .measurement-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 Growth Tracker</h1>
+            <div class="nav-buttons">
+                <a href="./interactive-greenhouse-designer.html" class="nav-btn">🏡 Dashboard</a>
+                <a href="./greenhouse-planner-multiple-crops.html" class="nav-btn">🌱 Planner</a>
+                <a href="./greenhouse-calendar-monitoring.html" class="nav-btn">📅 Calendar</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <!-- Record New Measurement -->
+                <div class="card">
+                    <h2>📏 Record New Measurement</h2>
+                    <form class="measurement-form" onsubmit="recordMeasurement(event)">
+                        <div class="form-group">
+                            <label for="bed-select">Grow Bed</label>
+                            <select id="bed-select" name="bedId" required>
+                                <option value="">Select Bed</option>
+                                <option value="bed_001">Tomato Bed A</option>
+                                <option value="bed_002">Pepper Bed B</option>
+                                <option value="bed_003">Lettuce Bed C</option>
+                                <option value="bed_004">Cucumber Bed D</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="crop-select">Crop Type</label>
+                            <select id="crop-select" name="cropId" required>
+                                <option value="">Select Crop</option>
+                                <option value="tomato">Tomatoes</option>
+                                <option value="pepper">Peppers</option>
+                                <option value="lettuce">Lettuce</option>
+                                <option value="cucumber">Cucumbers</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="height">Plant Height</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="height" name="height" step="0.1" placeholder="24.5">
+                                <select name="heightUnit">
+                                    <option value="inches">in</option>
+                                    <option value="cm">cm</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="width">Plant Width</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="width" name="width" step="0.1" placeholder="18.0">
+                                <select name="widthUnit">
+                                    <option value="inches">in</option>
+                                    <option value="cm">cm</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="leaf-count">Total Leaves</label>
+                            <input type="number" id="leaf-count" name="totalLeaves" placeholder="24">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new-leaves">New Leaves</label>
+                            <input type="number" id="new-leaves" name="newLeaves" placeholder="3">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fruit-count">Fruit Count</label>
+                            <input type="number" id="fruit-count" name="fruitCount" placeholder="8">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="health-score">Health Score (0-100)</label>
+                            <input type="range" id="health-score" name="healthScore" min="0" max="100" value="85" oninput="updateHealthDisplay(this.value)">
+                            <div style="text-align: center; margin-top: 5px;">
+                                <span id="health-display" style="font-weight: bold; color: #4CAF50;">85</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="condition">Overall Condition</label>
+                            <select id="condition" name="condition" required>
+                                <option value="excellent">Excellent</option>
+                                <option value="good" selected>Good</option>
+                                <option value="fair">Fair</option>
+                                <option value="poor">Poor</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="notes">Notes</label>
+                            <textarea id="notes" name="notes" rows="3" placeholder="Any observations, concerns, or notes about the plant..."></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Add Photos</label>
+                            <div class="photo-upload" onclick="document.getElementById('photo-input').click()">
+                                <div>📷 Click to upload photos</div>
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">Support for JPG, PNG (max 10MB each)</div>
+                            </div>
+                            <input type="file" id="photo-input" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(this)">
+                            <div id="photo-preview" class="photo-preview"></div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">
+                            📊 Record Measurement
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Growth Timeline -->
+                <div class="card">
+                    <h2>📈 Growth Timeline</h2>
+                    <div class="timeline" id="growth-timeline">
+                        <!-- Timeline items will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <!-- Growth Statistics -->
+                <div class="card">
+                    <h2>📊 Growth Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="avg-height">24.5"</div>
+                            <div class="stat-label">Avg Height</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="growth-rate">+0.4"/day</div>
+                            <div class="stat-label">Growth Rate</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="health-trend">+5%</div>
+                            <div class="stat-label">Health Trend</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="days-tracked">42</div>
+                            <div class="stat-label">Days Tracked</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Milestones -->
+                <div class="card">
+                    <h2>🎯 Growth Milestones</h2>
+                    <div id="milestones-list">
+                        <div class="milestone-item achieved">
+                            <div class="milestone-icon achieved">✓</div>
+                            <div class="milestone-content">
+                                <div class="milestone-name">Germination</div>
+                                <div class="milestone-date">Achieved 5 days ago</div>
+                            </div>
+                        </div>
+                        <div class="milestone-item achieved">
+                            <div class="milestone-icon achieved">✓</div>
+                            <div class="milestone-content">
+                                <div class="milestone-name">First True Leaves</div>
+                                <div class="milestone-date">Achieved 18 days ago</div>
+                            </div>
+                        </div>
+                        <div class="milestone-item">
+                            <div class="milestone-icon pending">○</div>
+                            <div class="milestone-content">
+                                <div class="milestone-name">Flowering</div>
+                                <div class="milestone-date">Expected in 12 days</div>
+                            </div>
+                        </div>
+                        <div class="milestone-item">
+                            <div class="milestone-icon pending">○</div>
+                            <div class="milestone-content">
+                                <div class="milestone-name">First Harvest</div>
+                                <div class="milestone-date">Expected in 28 days</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts Panel -->
+                <div class="card">
+                    <h2>🔔 Alerts & Notifications</h2>
+                    <button class="clear-all-btn" onclick="clearAllAlerts()">
+                        🗑️ Clear All Alerts
+                    </button>
+                    <div class="alerts-panel" id="alerts-panel">
+                        <div class="alert-item info">
+                            <div class="alert-header">
+                                <div class="alert-title">Growth Milestone</div>
+                                <div class="alert-time">2h ago</div>
+                            </div>
+                            <div class="alert-message">Tomato plants reached flowering stage ahead of schedule!</div>
+                        </div>
+                        <div class="alert-item warning">
+                            <div class="alert-header">
+                                <div class="alert-title">Health Concern</div>
+                                <div class="alert-time">4h ago</div>
+                            </div>
+                            <div class="alert-message">Lettuce Bed C showing signs of slow growth. Consider checking nutrient levels.</div>
+                        </div>
+                        <div class="alert-item critical">
+                            <div class="alert-header">
+                                <div class="alert-title">Attention Required</div>
+                                <div class="alert-time">6h ago</div>
+                            </div>
+                            <div class="alert-message">Cucumber plants in Bed D have health score below 60%. Immediate inspection recommended.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        // Update health score display
+        function updateHealthDisplay(value) {
+            const display = document.getElementById('health-display');
+            display.textContent = value;
+            
+            // Update color based on value
+            if (value >= 80) {
+                display.style.color = '#4CAF50';
+            } else if (value >= 60) {
+                display.style.color = '#FF9800';
+            } else {
+                display.style.color = '#f44336';
+            }
+        }
+
+        // Handle photo upload
+        function handlePhotoUpload(input) {
+            const preview = document.getElementById('photo-preview');
+            preview.innerHTML = '';
+            
+            Array.from(input.files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        preview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Record new measurement
+        async function recordMeasurement(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                alert('Please log in to record measurements');
+                window.location.href = './greenhouse-auth.html';
+                return;
+            }
+
+            const measurementData = {
+                bedId: formData.get('bedId'),
+                cropId: formData.get('cropId'),
+                measurements: {
+                    height: formData.get('height') ? {
+                        value: parseFloat(formData.get('height')),
+                        unit: formData.get('heightUnit'),
+                        measurementPoint: 'tallest'
+                    } : undefined,
+                    width: formData.get('width') ? {
+                        value: parseFloat(formData.get('width')),
+                        unit: formData.get('widthUnit'),
+                        measurementPoint: 'widest'
+                    } : undefined,
+                    leafCount: formData.get('totalLeaves') ? {
+                        total: parseInt(formData.get('totalLeaves')),
+                        mature: parseInt(formData.get('totalLeaves')) - parseInt(formData.get('newLeaves') || 0),
+                        new: parseInt(formData.get('newLeaves') || 0)
+                    } : undefined,
+                    fruitCount: formData.get('fruitCount') ? {
+                        total: parseInt(formData.get('fruitCount')),
+                        ripe: Math.floor(parseInt(formData.get('fruitCount')) * 0.3),
+                        unripe: Math.floor(parseInt(formData.get('fruitCount')) * 0.7),
+                        flowering: 0
+                    } : undefined,
+                    healthScore: parseInt(formData.get('healthScore')),
+                    overallCondition: formData.get('condition')
+                },
+                notes: formData.get('notes'),
+                photos: [] // Photos would be handled separately in production
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/growth-tracking/measurements`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(measurementData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Measurement recorded successfully!');
+                    event.target.reset();
+                    document.getElementById('photo-preview').innerHTML = '';
+                    updateHealthDisplay(85); // Reset health display
+                    loadGrowthTimeline(); // Refresh timeline
+                } else {
+                    alert(result.message || 'Failed to record measurement');
+                }
+            } catch (error) {
+                console.error('Record measurement error:', error);
+                alert('Failed to record measurement. Please try again.');
+            }
+        }
+
+        // Clear all alerts
+        async function clearAllAlerts() {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                alert('Please log in to manage alerts');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to clear all alerts? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/growth-tracking/alerts/clear-all`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('alerts-panel').innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No alerts</div>';
+                    alert('All alerts cleared successfully!');
+                } else {
+                    alert(result.message || 'Failed to clear alerts');
+                }
+            } catch (error) {
+                console.error('Clear alerts error:', error);
+                alert('Failed to clear alerts. Please try again.');
+            }
+        }
+
+        // Load growth timeline
+        async function loadGrowthTimeline() {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) return;
+
+            try {
+                // Mock timeline data for demo
+                const timelineData = [
+                    {
+                        date: new Date(Date.now() - 24 * 60 * 60 * 1000),
+                        measurements: {
+                            height: { value: 24.5, unit: 'inches' },
+                            leafCount: { total: 18 },
+                            healthScore: 85,
+                            fruitCount: { total: 3 }
+                        },
+                        notes: 'Strong growth, healthy color'
+                    },
+                    {
+                        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                        measurements: {
+                            height: { value: 22.1, unit: 'inches' },
+                            leafCount: { total: 15 },
+                            healthScore: 82,
+                            fruitCount: { total: 1 }
+                        },
+                        notes: 'First fruit appeared'
+                    },
+                    {
+                        date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+                        measurements: {
+                            height: { value: 19.8, unit: 'inches' },
+                            leafCount: { total: 12 },
+                            healthScore: 88,
+                            fruitCount: { total: 0 }
+                        },
+                        notes: 'Flowering started'
+                    }
+                ];
+
+                const timeline = document.getElementById('growth-timeline');
+                timeline.innerHTML = '';
+
+                timelineData.forEach(item => {
+                    const timelineItem = document.createElement('div');
+                    timelineItem.className = 'timeline-item';
+                    
+                    timelineItem.innerHTML = `
+                        <div class="timeline-date">
+                            ${item.date.toLocaleDateString()}
+                        </div>
+                        <div class="timeline-content">
+                            <div style="font-weight: bold; margin-bottom: 8px;">${item.notes}</div>
+                            <div class="timeline-measurements">
+                                ${item.measurements.height ? `
+                                    <div class="measurement-item">
+                                        <div class="measurement-value">${item.measurements.height.value}"</div>
+                                        <div class="measurement-label">Height</div>
+                                    </div>
+                                ` : ''}
+                                ${item.measurements.leafCount ? `
+                                    <div class="measurement-item">
+                                        <div class="measurement-value">${item.measurements.leafCount.total}</div>
+                                        <div class="measurement-label">Leaves</div>
+                                    </div>
+                                ` : ''}
+                                ${item.measurements.fruitCount ? `
+                                    <div class="measurement-item">
+                                        <div class="measurement-value">${item.measurements.fruitCount.total}</div>
+                                        <div class="measurement-label">Fruits</div>
+                                    </div>
+                                ` : ''}
+                                <div class="measurement-item">
+                                    <div class="measurement-value">${item.measurements.healthScore}%</div>
+                                    <div class="measurement-label">Health</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    timeline.appendChild(timelineItem);
+                });
+
+            } catch (error) {
+                console.error('Load timeline error:', error);
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = './greenhouse-auth.html';
+                return;
+            }
+
+            // Load initial data
+            loadGrowthTimeline();
+        });
+    </script>
+</body>
+</html>

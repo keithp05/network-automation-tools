@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greenhouse Planning System - Multiple Crops</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 20px;
+        }
+        
+        .wizard {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .wizard-steps {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .wizard-step {
+            flex: 1;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .wizard-step.active {
+            background: white;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .wizard-step.completed {
+            color: #27ae60;
+        }
+        
+        .wizard-content {
+            padding: 2rem;
+            min-height: 500px;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .greenhouse-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .greenhouse-card {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .greenhouse-card:hover {
+            border-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+        }
+        
+        .greenhouse-card.selected {
+            border-color: #27ae60;
+            background: #e8f5e9;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .crop-selector {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .crop-input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: end;
+            margin-bottom: 1rem;
+        }
+        
+        .crop-input-group input {
+            flex: 2;
+        }
+        
+        .crop-input-group .beds-input {
+            flex: 1;
+        }
+        
+        .selected-crops {
+            margin-top: 1rem;
+        }
+        
+        .crop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .crop-item.primary {
+            border-color: #27ae60;
+            background: #e8f5e9;
+        }
+        
+        .remove-crop {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .bed-layout-preview {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .bed-grid {
+            display: grid;
+            gap: 10px;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+        
+        .bed-square {
+            width: 40px;
+            height: 20px;
+            background: #27ae60;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .walkway {
+            background: #bdc3c7;
+            opacity: 0.5;
+        }
+        
+        .compatibility-warnings {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+        
+        .warning-item {
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+        
+        .companion-suggestions {
+            background: #e8f5e9;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+        
+        .companion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .companion-chip {
+            background: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid #27ae60;
+            color: #27ae60;
+        }
+        
+        button {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #229954;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-add {
+            background: #3498db;
+            color: white;
+            padding: 0.5rem 1rem;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .layout-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .materials-summary {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .material-category {
+            margin-bottom: 1.5rem;
+        }
+        
+        .material-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 1rem;
+            padding: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27ae60;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌱 Advanced Greenhouse Planning System</h1>
+        <p>Design your perfect multi-crop greenhouse with standard 4x8 beds and optimized layout</p>
+    </div>
+    
+    <div class="container">
+        <div class="wizard">
+            <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1">1. Greenhouse Type</div>
+                <div class="wizard-step" data-step="2">2. Dimensions</div>
+                <div class="wizard-step" data-step="3">3. Multiple Crops</div>
+                <div class="wizard-step" data-step="4">4. Bed Layout</div>
+                <div class="wizard-step" data-step="5">5. Materials & Export</div>
+            </div>
+            
+            <div class="wizard-content">
+                <!-- Step 1: Greenhouse Type -->
+                <div class="step-content active" id="step1">
+                    <h2>Select Your Greenhouse Type</h2>
+                    <div class="greenhouse-types" id="greenhouseTypes">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Step 2: Dimensions & Location -->
+                <div class="step-content" id="step2">
+                    <h2>Greenhouse Dimensions & Location</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Length (feet)</label>
+                            <input type="number" id="length" min="16" max="200" value="32" required>
+                            <small>Minimum 16 feet to accommodate 4x8 beds with walkways</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Width (feet)</label>
+                            <input type="number" id="width" min="12" max="50" value="20" required>
+                            <small>Minimum 12 feet for single row of beds</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Height (feet)</label>
+                            <input type="number" id="height" min="8" max="20" value="12" required>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-top: 2rem;">Location</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Latitude</label>
+                            <input type="number" id="latitude" step="0.0001" value="40.7128" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude</label>
+                            <input type="number" id="longitude" step="0.0001" value="-74.0060" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Climate Zone</label>
+                            <select id="climateZone" required>
+                                <option value="3a">3a (-40 to -35°F)</option>
+                                <option value="4a">4a (-30 to -25°F)</option>
+                                <option value="5a">5a (-20 to -15°F)</option>
+                                <option value="6a">6a (-10 to -5°F)</option>
+                                <option value="6b" selected>6b (-5 to 0°F)</option>
+                                <option value="7a">7a (0 to 5°F)</option>
+                                <option value="8a">8a (10 to 15°F)</option>
+                                <option value="9a">9a (20 to 25°F)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Multiple Crop Selection -->
+                <div class="step-content" id="step3">
+                    <h2>Select Multiple Crops</h2>
+                    <div class="crop-selector">
+                        <h3>Add Crops to Your Greenhouse</h3>
+                        <div class="crop-input-group">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label>Crop Name</label>
+                                <input type="text" id="newCrop" placeholder="e.g., Tomatoes, Lettuce, Basil" list="cropList">
+                                <datalist id="cropList">
+                                    <option value="Tomatoes">
+                                    <option value="Lettuce">
+                                    <option value="Peppers">
+                                    <option value="Cucumbers">
+                                    <option value="Basil">
+                                    <option value="Spinach">
+                                    <option value="Kale">
+                                    <option value="Strawberries">
+                                    <option value="Beans">
+                                    <option value="Carrots">
+                                    <option value="Radishes">
+                                    <option value="Chard">
+                                    <option value="Cilantro">
+                                    <option value="Parsley">
+                                </datalist>
+                            </div>
+                            <div class="form-group beds-input" style="margin-bottom: 0;">
+                                <label># of 4x8 Beds</label>
+                                <input type="number" id="bedCount" min="1" max="10" value="2">
+                            </div>
+                            <button type="button" class="btn-add" onclick="addCrop()">Add Crop</button>
+                        </div>
+                    </div>
+                    
+                    <div class="selected-crops">
+                        <h3>Selected Crops</h3>
+                        <div id="cropsList">
+                            <p style="color: #666; font-style: italic;">No crops selected yet. Add crops above.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="cropCompatibility" style="display: none;">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    
+                    <button type="button" class="btn-primary" onclick="analyzeCrops()" id="analyzeCropsBtn" style="display: none; margin-top: 1rem;">
+                        Analyze Crop Compatibility & Get Recommendations
+                    </button>
+                </div>
+                
+                <!-- Step 4: Bed Layout -->
+                <div class="step-content" id="step4">
+                    <h2>4x8 Bed Layout with Walkways</h2>
+                    <div class="bed-layout-preview">
+                        <h3>Bed Layout Preview</h3>
+                        <div id="layoutVisualization">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                        
+                        <div class="layout-stats">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalBeds">0</div>
+                                <div>Total Beds</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="bedArea">0 ft²</div>
+                                <div>Growing Area</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="walkwayArea">0 ft²</div>
+                                <div>Walkway Area</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="efficiency">0%</div>
+                                <div>Space Efficiency</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Materials & Export -->
+                <div class="step-content" id="step5">
+                    <h2>Complete Materials List</h2>
+                    <div class="materials-summary" id="materialsList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button class="btn-primary" onclick="exportPlan()">Export Complete Plan as CSV</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-secondary" onclick="previousStep()" id="prevBtn" style="display: none;">Previous</button>
+                <button class="btn-primary" onclick="nextStep()" id="nextBtn">Next</button>
+                <button class="btn-primary" onclick="generateMaterials()" id="materialsBtn" style="display: none;">Generate Materials List</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        let selectedCrops = [];
+        let cropCompatibility = null;
+        let bedLayout = null;
+        let greenhousePlan = {};
+        
+        // Greenhouse types
+        const greenhouseTypes = [
+            {
+                type: 'hoop_house',
+                name: 'Hoop House',
+                description: 'Simple arched structure, perfect for beginners',
+                advantages: ['Low cost', 'Easy setup', 'Good for season extension']
+            },
+            {
+                type: 'geodesic_dome',
+                name: 'Geodesic Dome',
+                description: 'Spherical design with excellent strength',
+                advantages: ['Wind resistant', 'Energy efficient', 'Even light distribution']
+            },
+            {
+                type: 'traditional_gable',
+                name: 'Traditional Gable',
+                description: 'Classic peaked roof design',
+                advantages: ['Maximum headroom', 'Easy equipment installation', 'Professional appearance']
+            },
+            {
+                type: 'quonset',
+                name: 'Quonset Hut',
+                description: 'Semi-circular arch, commercial grade',
+                advantages: ['Strong structure', 'Good for large operations', 'Efficient material use']
+            }
+        ];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            populateGreenhouseTypes();
+        });
+        
+        function populateGreenhouseTypes() {
+            const container = document.getElementById('greenhouseTypes');
+            container.innerHTML = greenhouseTypes.map(type => `
+                <div class="greenhouse-card" onclick="selectGreenhouseType('${type.type}')">
+                    <h3>${type.name}</h3>
+                    <p>${type.description}</p>
+                    <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                        ${type.advantages.map(adv => `<li>${adv}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+        }
+        
+        function selectGreenhouseType(type) {
+            greenhousePlan.type = type;
+            document.querySelectorAll('.greenhouse-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.greenhouse-card').classList.add('selected');
+        }
+        
+        function addCrop() {
+            const cropName = document.getElementById('newCrop').value.trim();
+            const bedCount = parseInt(document.getElementById('bedCount').value);
+            
+            if (!cropName) {
+                alert('Please enter a crop name');
+                return;
+            }
+            
+            if (selectedCrops.find(crop => crop.name.toLowerCase() === cropName.toLowerCase())) {
+                alert('This crop is already added');
+                return;
+            }
+            
+            const crop = {
+                name: cropName,
+                beds: bedCount,
+                isPrimary: selectedCrops.length === 0
+            };
+            
+            selectedCrops.push(crop);
+            updateCropsList();
+            
+            // Clear inputs
+            document.getElementById('newCrop').value = '';
+            document.getElementById('bedCount').value = '2';
+            
+            // Show analyze button
+            document.getElementById('analyzeCropsBtn').style.display = 'block';
+        }
+        
+        function removeCrop(index) {
+            selectedCrops.splice(index, 1);
+            // Make first crop primary if exists
+            if (selectedCrops.length > 0) {
+                selectedCrops[0].isPrimary = true;
+            }
+            updateCropsList();
+            
+            if (selectedCrops.length === 0) {
+                document.getElementById('analyzeCropsBtn').style.display = 'none';
+                document.getElementById('cropCompatibility').style.display = 'none';
+            }
+        }
+        
+        function updateCropsList() {
+            const container = document.getElementById('cropsList');
+            
+            if (selectedCrops.length === 0) {
+                container.innerHTML = '<p style="color: #666; font-style: italic;">No crops selected yet. Add crops above.</p>';
+                return;
+            }
+            
+            container.innerHTML = selectedCrops.map((crop, index) => `
+                <div class="crop-item ${crop.isPrimary ? 'primary' : ''}">
+                    <div>
+                        <strong>${crop.name}</strong> 
+                        ${crop.isPrimary ? '<span style="color: #27ae60;">(Primary)</span>' : ''}
+                        <br>
+                        <small>${crop.beds} × 4x8 beds (${crop.beds * 32} sq ft)</small>
+                    </div>
+                    <button class="remove-crop" onclick="removeCrop(${index})">Remove</button>
+                </div>
+            `).join('');
+        }
+        
+        async function analyzeCrops() {
+            if (selectedCrops.length === 0) return;
+            
+            const compatibilityDiv = document.getElementById('cropCompatibility');
+            compatibilityDiv.style.display = 'block';
+            compatibilityDiv.innerHTML = '<p>Analyzing crop compatibility... <span class="loading"></span></p>';
+            
+            // Simulate API call for demo
+            setTimeout(() => {
+                displayCompatibilityResults();
+            }, 1500);
+        }
+        
+        function displayCompatibilityResults() {
+            const compatibilityDiv = document.getElementById('cropCompatibility');
+            
+            // Simulate compatibility analysis
+            const warnings = [];
+            const companions = [];
+            
+            if (selectedCrops.find(c => c.name === 'Tomatoes') && selectedCrops.find(c => c.name === 'Beans')) {
+                warnings.push('Tomatoes and Beans may compete for nutrients');
+            }
+            
+            selectedCrops.forEach(crop => {
+                const cropCompanions = getCompanions(crop.name);
+                companions.push(...cropCompanions.map(c => `${c} (good with ${crop.name})`));
+            });
+            
+            let html = '';
+            
+            if (warnings.length > 0) {
+                html += `
+                    <div class="compatibility-warnings">
+                        <h4>⚠️ Compatibility Warnings</h4>
+                        ${warnings.map(w => `<div class="warning-item">${w}</div>`).join('')}
+                    </div>
+                `;
+            }
+            
+            if (companions.length > 0) {
+                html += `
+                    <div class="companion-suggestions">
+                        <h4>🌿 Suggested Companion Plants</h4>
+                        <div class="companion-chips">
+                            ${[...new Set(companions)].slice(0, 8).map(c => `<span class="companion-chip">${c}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            compatibilityDiv.innerHTML = html || '<div style="color: #27ae60;">✅ No compatibility issues found!</div>';
+        }
+        
+        function getCompanions(cropName) {
+            const companions = {
+                'Tomatoes': ['Basil', 'Marigolds', 'Carrots'],
+                'Lettuce': ['Radishes', 'Chives', 'Carrots'],
+                'Peppers': ['Basil', 'Onions', 'Spinach'],
+                'Cucumbers': ['Beans', 'Radishes', 'Peas'],
+                'Basil': ['Tomatoes', 'Peppers', 'Lettuce']
+            };
+            return companions[cropName] || ['Marigolds', 'Nasturtiums'];
+        }
+        
+        function nextStep() {
+            if (validateCurrentStep()) {
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('completed');
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+                
+                updateButtons();
+                
+                if (currentStep === 4) {
+                    calculateBedLayout();
+                }
+            }
+        }
+        
+        function previousStep() {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+            currentStep--;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+            updateButtons();
+        }
+        
+        function updateButtons() {
+            document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
+            document.getElementById('nextBtn').style.display = currentStep < 5 ? 'block' : 'none';
+            document.getElementById('materialsBtn').style.display = currentStep === 5 ? 'block' : 'none';
+        }
+        
+        function validateCurrentStep() {
+            switch (currentStep) {
+                case 1:
+                    if (!greenhousePlan.type) {
+                        alert('Please select a greenhouse type');
+                        return false;
+                    }
+                    break;
+                case 2:
+                    greenhousePlan.dimensions = {
+                        length: parseFloat(document.getElementById('length').value),
+                        width: parseFloat(document.getElementById('width').value),
+                        height: parseFloat(document.getElementById('height').value)
+                    };
+                    greenhousePlan.location = {
+                        latitude: parseFloat(document.getElementById('latitude').value),
+                        longitude: parseFloat(document.getElementById('longitude').value),
+                        climate_zone: document.getElementById('climateZone').value
+                    };
+                    break;
+                case 3:
+                    if (selectedCrops.length === 0) {
+                        alert('Please add at least one crop');
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
+        
+        function calculateBedLayout() {
+            const totalBeds = selectedCrops.reduce((sum, crop) => sum + crop.beds, 0);
+            const { length, width } = greenhousePlan.dimensions;
+            
+            // Calculate layout (simplified)
+            const walkwayWidth = 3;
+            const bedLength = 8;
+            const bedWidth = 4;
+            const perimeterSpace = 2;
+            
+            const availableLength = length - (2 * perimeterSpace);
+            const availableWidth = width - (2 * perimeterSpace);
+            
+            const maxBedsPerRow = Math.floor((availableLength + walkwayWidth) / (bedLength + walkwayWidth));
+            const maxRows = Math.floor((availableWidth + walkwayWidth) / (bedWidth + walkwayWidth));
+            const maxPossibleBeds = maxBedsPerRow * maxRows;
+            
+            const actualBeds = Math.min(totalBeds, maxPossibleBeds);
+            const bedsPerRow = Math.min(maxBedsPerRow, actualBeds);
+            const rows = Math.ceil(actualBeds / bedsPerRow);
+            
+            bedLayout = {
+                totalBeds: actualBeds,
+                bedsPerRow,
+                rows,
+                bedArea: actualBeds * 32, // 4x8 = 32 sq ft
+                walkwayArea: (length * width) - (actualBeds * 32),
+                efficiency: (actualBeds * 32) / (length * width) * 100
+            };
+            
+            displayBedLayout();
+        }
+        
+        function displayBedLayout() {
+            document.getElementById('totalBeds').textContent = bedLayout.totalBeds;
+            document.getElementById('bedArea').textContent = bedLayout.bedArea + ' ft²';
+            document.getElementById('walkwayArea').textContent = Math.round(bedLayout.walkwayArea) + ' ft²';
+            document.getElementById('efficiency').textContent = Math.round(bedLayout.efficiency) + '%';
+            
+            // Create visual layout
+            const visualization = document.getElementById('layoutVisualization');
+            let html = '<div style="display: grid; gap: 5px; justify-content: center; grid-template-columns: repeat(' + bedLayout.bedsPerRow + ', 60px);">';
+            
+            let bedIndex = 0;
+            for (let row = 0; row < bedLayout.rows; row++) {
+                for (let col = 0; col < bedLayout.bedsPerRow && bedIndex < bedLayout.totalBeds; col++) {
+                    const cropForBed = getCropForBed(bedIndex);
+                    html += `<div class="bed-square" title="${cropForBed}">${cropForBed.substring(0, 3).toUpperCase()}</div>`;
+                    bedIndex++;
+                }
+            }
+            html += '</div>';
+            
+            html += `
+                <div style="margin-top: 1rem; text-align: center; color: #666;">
+                    <small>Each square represents a 4x8 foot grow bed<br>
+                    3-foot walkways between all beds</small>
+                </div>
+            `;
+            
+            visualization.innerHTML = html;
+        }
+        
+        function getCropForBed(bedIndex) {
+            let currentIndex = 0;
+            for (const crop of selectedCrops) {
+                if (bedIndex >= currentIndex && bedIndex < currentIndex + crop.beds) {
+                    return crop.name;
+                }
+                currentIndex += crop.beds;
+            }
+            return 'Bed';
+        }
+        
+        function generateMaterials() {
+            const materialsList = document.getElementById('materialsList');
+            materialsList.innerHTML = '<p>Generating materials list... <span class="loading"></span></p>';
+            
+            setTimeout(() => {
+                displayMaterialsList();
+            }, 1000);
+        }
+        
+        function displayMaterialsList() {
+            const materialsList = document.getElementById('materialsList');
+            const area = greenhousePlan.dimensions.length * greenhousePlan.dimensions.width;
+            
+            const materials = [
+                {
+                    category: 'Greenhouse Structure',
+                    items: [
+                        { name: 'Greenhouse Frame Kit', quantity: 1, unit: 'kit', cost: 2500 },
+                        { name: 'Covering Material', quantity: Math.ceil(area * 1.3), unit: 'sq ft', cost: Math.ceil(area * 1.3 * 0.15) }
+                    ]
+                },
+                {
+                    category: 'Standard 4x8 Grow Beds',
+                    items: [
+                        { name: '4x8 Raised Bed Frames', quantity: bedLayout.totalBeds, unit: 'units', cost: bedLayout.totalBeds * 85 },
+                        { name: 'Growing Medium', quantity: bedLayout.totalBeds * 4, unit: 'cubic yards', cost: bedLayout.totalBeds * 4 * 40 }
+                    ]
+                },
+                {
+                    category: 'Irrigation System',
+                    items: [
+                        { name: 'Drip Irrigation Kit', quantity: bedLayout.totalBeds, unit: 'kits', cost: bedLayout.totalBeds * 45 },
+                        { name: 'Main Water Lines', quantity: Math.ceil(greenhousePlan.dimensions.length / 10), unit: '50ft rolls', cost: Math.ceil(greenhousePlan.dimensions.length / 10) * 35 }
+                    ]
+                }
+            ];
+            
+            let totalCost = 0;
+            let html = '';
+            
+            materials.forEach(category => {
+                html += `
+                    <div class="material-category">
+                        <h4>${category.category}</h4>
+                        <div class="material-item">
+                            <div><strong>Item</strong></div>
+                            <div><strong>Quantity</strong></div>
+                            <div><strong>Unit</strong></div>
+                            <div><strong>Cost</strong></div>
+                        </div>
+                `;
+                
+                category.items.forEach(item => {
+                    totalCost += item.cost;
+                    html += `
+                        <div class="material-item">
+                            <div>${item.name}</div>
+                            <div>${item.quantity}</div>
+                            <div>${item.unit}</div>
+                            <div>$${item.cost}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            });
+            
+            html += `
+                <div style="background: #27ae60; color: white; padding: 1rem; border-radius: 5px; text-align: center; margin-top: 1rem;">
+                    <strong>Total Estimated Cost: $${totalCost.toLocaleString()}</strong>
+                </div>
+            `;
+            
+            materialsList.innerHTML = html;
+        }
+        
+        function exportPlan() {
+            // Create CSV content
+            let csv = 'Greenhouse Planning System - Complete Plan\n\n';
+            csv += 'GREENHOUSE CONFIGURATION\n';
+            csv += `Type,${greenhousePlan.type}\n`;
+            csv += `Dimensions,${greenhousePlan.dimensions.length}x${greenhousePlan.dimensions.width}x${greenhousePlan.dimensions.height} feet\n`;
+            csv += `Location,${greenhousePlan.location.climate_zone}\n\n`;
+            
+            csv += 'SELECTED CROPS\n';
+            csv += 'Crop,Beds Allocated,Growing Area\n';
+            selectedCrops.forEach(crop => {
+                csv += `${crop.name},${crop.beds},${crop.beds * 32} sq ft\n`;
+            });
+            
+            csv += '\nBED LAYOUT\n';
+            csv += `Total Beds,${bedLayout.totalBeds}\n`;
+            csv += `Layout,${bedLayout.bedsPerRow} beds per row x ${bedLayout.rows} rows\n`;
+            csv += `Growing Area,${bedLayout.bedArea} sq ft\n`;
+            csv += `Space Efficiency,${Math.round(bedLayout.efficiency)}%\n`;
+            
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'greenhouse-plan-multiple-crops.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

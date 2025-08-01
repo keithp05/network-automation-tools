@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Battery Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        button {
+            background-color: #27ae60;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+        button:hover {
+            background-color: #229954;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            display: none;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .parts-list {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #27ae60;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Climate Battery Calculator</h1>
+        
+        <form id="calculatorForm">
+            <div class="form-section">
+                <h3>Greenhouse Geometry</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Box Width (ft)</label>
+                        <input type="number" id="boxWidth" value="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Box Length (ft)</label>
+                        <input type="number" id="boxLength" value="96" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Box Height (ft)</label>
+                        <input type="number" id="boxHeight" value="14" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Roof Width (ft)</label>
+                        <input type="number" id="roofWidth" value="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Roof Length (ft)</label>
+                        <input type="number" id="roofLength" value="96" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Peak Height (ft)</label>
+                        <input type="number" id="peakHeight" value="8" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Fan Specifications</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Number of Fans</label>
+                        <input type="number" id="numberOfFans" value="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CFM per Fan</label>
+                        <input type="number" id="cfmPerFan" value="2000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Daily Hours</label>
+                        <input type="number" id="dailyHours" value="8" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>System Design</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tubing Diameter (inches)</label>
+                        <select id="tubingDiameter">
+                            <option value="4" selected>4"</option>
+                            <option value="12">12"</option>
+                            <option value="15">15"</option>
+                            <option value="18">18"</option>
+                            <option value="24">24"</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Risers</label>
+                        <input type="number" id="numberOfRisers" value="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Manifolds</label>
+                        <input type="number" id="numberOfManifolds" value="2" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Cost Parameters</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tubing Cost ($/ft)</label>
+                        <input type="number" id="tubingCost" value="0.65" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Electricity Rate ($/kWh)</label>
+                        <input type="number" id="electricityRate" value="0.103" step="0.001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Gas Rate ($/therm)</label>
+                        <input type="number" id="gasRate" value="1.47" step="0.01" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Calculate Climate Battery</button>
+        </form>
+
+        <div id="results" class="results">
+            <h2>Results</h2>
+            <div class="summary" id="summary"></div>
+            <div class="parts-list">
+                <h3>Parts List</h3>
+                <table id="partsTable">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Quantity</th>
+                            <th>Unit Cost</th>
+                            <th>Total Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partsBody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3">Total Hardware Cost</th>
+                            <th id="totalCost"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <button onclick="exportToCSV()">Export Parts List to CSV</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('calculatorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const design = {
+                greenhouseGeometry: {
+                    boxSection: {
+                        width: parseFloat(document.getElementById('boxWidth').value),
+                        length: parseFloat(document.getElementById('boxLength').value),
+                        height: parseFloat(document.getElementById('boxHeight').value)
+                    },
+                    roofSection: {
+                        width: parseFloat(document.getElementById('roofWidth').value),
+                        length: parseFloat(document.getElementById('roofLength').value),
+                        peakHeight: parseFloat(document.getElementById('peakHeight').value)
+                    }
+                },
+                fanSpecs: {
+                    numberOfFans: parseInt(document.getElementById('numberOfFans').value),
+                    cfmPerFan: parseInt(document.getElementById('cfmPerFan').value),
+                    voltage: 120,
+                    amperage: 2,
+                    wattage: 240,
+                    dailyHours: parseInt(document.getElementById('dailyHours').value)
+                },
+                tubingDiameter: parseInt(document.getElementById('tubingDiameter').value),
+                numberOfRisers: parseInt(document.getElementById('numberOfRisers').value),
+                numberOfManifolds: parseInt(document.getElementById('numberOfManifolds').value),
+                costParameters: {
+                    perFootTubingCost: parseFloat(document.getElementById('tubingCost').value),
+                    riserCost: 250,
+                    manifoldCost: 200,
+                    fanCost: 150,
+                    controlsPackageCost: 1000,
+                    electricityRate: parseFloat(document.getElementById('electricityRate').value),
+                    gasRate: parseFloat(document.getElementById('gasRate').value)
+                },
+                climateData: {
+                    heatingDegreeDays: 8619,
+                    coolingDegreeDays: 415,
+                    averageYearlyLow: 7,
+                    averageYearlyHigh: 77
+                },
+                insulationData: {
+                    glazedRoofArea: 3400,
+                    insulatedRoofArea: 0,
+                    glazedWallsArea: 1200,
+                    insulatedWallsArea: 600,
+                    glazedRoofRValue: 1.43,
+                    insulatedRoofRValue: 15,
+                    glazedWallRValue: 1.63,
+                    insulatedWallRValue: 15,
+                    interiorDesignTemp: 40,
+                    glazingSolarHeatGainCoeff: 0.82
+                }
+            };
+
+            try {
+                // For testing, we'll calculate locally
+                const results = calculateLocally(design);
+                displayResults(results);
+            } catch (error) {
+                alert('Error calculating: ' + error.message);
+            }
+        });
+
+        function calculateLocally(design) {
+            // Basic calculations
+            const boxVolume = design.greenhouseGeometry.boxSection.width * 
+                             design.greenhouseGeometry.boxSection.length * 
+                             design.greenhouseGeometry.boxSection.height;
+            
+            const roofVolume = (design.greenhouseGeometry.roofSection.width * 
+                               design.greenhouseGeometry.roofSection.length * 
+                               design.greenhouseGeometry.roofSection.peakHeight) / 2;
+            
+            const totalAirVolume = boxVolume + roofVolume;
+            const totalCFM = design.fanSpecs.numberOfFans * design.fanSpecs.cfmPerFan;
+            const airChangesPerHour = (totalCFM * 60) / totalAirVolume;
+            
+            // Tubing calculations
+            const totalTubingLength = totalAirVolume / 6.5 * (4 / design.tubingDiameter);
+            const totalTubingCost = totalTubingLength * design.costParameters.perFootTubingCost;
+            const totalFanCost = design.fanSpecs.numberOfFans * design.costParameters.fanCost;
+            const totalManifoldCost = design.numberOfManifolds * design.costParameters.manifoldCost;
+            const totalRiserCost = design.numberOfRisers * design.costParameters.riserCost;
+            const totalHardwareCost = totalTubingCost + totalFanCost + totalManifoldCost + 
+                                     totalRiserCost + design.costParameters.controlsPackageCost;
+            
+            // Operating costs
+            const dailyKWH = (design.fanSpecs.wattage * design.fanSpecs.dailyHours * 
+                             design.fanSpecs.numberOfFans) / 1000;
+            const annualFanOperatingCost = dailyKWH * 365 * design.costParameters.electricityRate;
+            
+            // Savings calculations
+            const heatStorageCapacity = totalAirVolume * 120; // 120 lbs/ft³
+            const storedHeatValue = (heatStorageCapacity / 100000) * design.costParameters.gasRate;
+            const yearlyGasValue = storedHeatValue * 180; // 180 days
+            const yearlyNetSavings = yearlyGasValue - annualFanOperatingCost;
+            const paybackYears = totalHardwareCost / yearlyNetSavings;
+            
+            return {
+                totalAirVolume,
+                totalCFM,
+                airChangesPerHour,
+                totalTubingLength,
+                totalHardwareCost,
+                yearlyNetSavings,
+                paybackYears,
+                partsList: [
+                    {
+                        name: `ADS ${design.tubingDiameter}" Diameter Pipe`,
+                        quantity: Math.ceil(totalTubingLength),
+                        unitCost: design.costParameters.perFootTubingCost,
+                        totalCost: totalTubingCost
+                    },
+                    {
+                        name: 'Vertical Risers',
+                        quantity: design.numberOfRisers,
+                        unitCost: design.costParameters.riserCost,
+                        totalCost: totalRiserCost
+                    },
+                    {
+                        name: 'Air Manifolds',
+                        quantity: design.numberOfManifolds,
+                        unitCost: design.costParameters.manifoldCost,
+                        totalCost: totalManifoldCost
+                    },
+                    {
+                        name: `${design.fanSpecs.cfmPerFan} CFM Inline Fans`,
+                        quantity: design.fanSpecs.numberOfFans,
+                        unitCost: design.costParameters.fanCost,
+                        totalCost: totalFanCost
+                    },
+                    {
+                        name: 'Control System',
+                        quantity: 1,
+                        unitCost: design.costParameters.controlsPackageCost,
+                        totalCost: design.costParameters.controlsPackageCost
+                    }
+                ]
+            };
+        }
+
+        function displayResults(results) {
+            const summaryHtml = `
+                <div class="summary-item">
+                    <div>Total Air Volume</div>
+                    <div class="summary-value">${results.totalAirVolume.toFixed(0)} ft³</div>
+                </div>
+                <div class="summary-item">
+                    <div>Air Changes/Hour</div>
+                    <div class="summary-value">${results.airChangesPerHour.toFixed(1)}</div>
+                </div>
+                <div class="summary-item">
+                    <div>Tubing Length</div>
+                    <div class="summary-value">${results.totalTubingLength.toFixed(0)} ft</div>
+                </div>
+                <div class="summary-item">
+                    <div>Yearly Savings</div>
+                    <div class="summary-value">$${results.yearlyNetSavings.toFixed(2)}</div>
+                </div>
+                <div class="summary-item">
+                    <div>Payback Period</div>
+                    <div class="summary-value">${results.paybackYears.toFixed(1)} years</div>
+                </div>
+            `;
+            
+            document.getElementById('summary').innerHTML = summaryHtml;
+            
+            const partsBody = document.getElementById('partsBody');
+            partsBody.innerHTML = '';
+            
+            results.partsList.forEach(part => {
+                const row = `
+                    <tr>
+                        <td>${part.name}</td>
+                        <td>${part.quantity}</td>
+                        <td>$${part.unitCost.toFixed(2)}</td>
+                        <td>$${part.totalCost.toFixed(2)}</td>
+                    </tr>
+                `;
+                partsBody.innerHTML += row;
+            });
+            
+            document.getElementById('totalCost').textContent = `$${results.totalHardwareCost.toFixed(2)}`;
+            document.getElementById('results').style.display = 'block';
+            
+            // Store results for export
+            window.currentResults = results;
+        }
+
+        function exportToCSV() {
+            if (!window.currentResults) return;
+            
+            let csv = 'Component,Quantity,Unit Cost,Total Cost\n';
+            window.currentResults.partsList.forEach(part => {
+                csv += `"${part.name}",${part.quantity},$${part.unitCost.toFixed(2)},$${part.totalCost.toFixed(2)}\n`;
+            });
+            csv += `\nTotal Hardware Cost,,,$${window.currentResults.totalHardwareCost.toFixed(2)}\n`;
+            csv += `Yearly Savings,,,$${window.currentResults.yearlyNetSavings.toFixed(2)}\n`;
+            csv += `Payback Period,,,${window.currentResults.paybackYears.toFixed(1)} years\n`;
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'climate-battery-parts-list.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
