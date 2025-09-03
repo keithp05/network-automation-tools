@@ -1,0 +1,43 @@
+SD-WAN Configuration Removal Summary
+====================================
+
+Date: September 3, 2025
+Original File: candidate-config.xml
+Cleaned File: candidate-config-no-sdwan.xml
+
+What was removed:
+-----------------
+1. All <sdwan-link-settings> elements from interfaces
+   - These were found on multiple ethernet interfaces
+   - Most were already disabled (<enable>no</enable>)
+
+2. SD-WAN related tunnel configurations
+   - Tunnel names containing "sdwan" (e.g., enru-azcpa01-sdwan-primary)
+   - Associated IKE gateways and IPSec profiles
+
+3. Comments containing "sdwan" references
+   - Comments like "Azcpa01-sdwan", "Azepa02-sdwan", etc.
+
+4. Virtual System 8 (vsys8) if it contained SD-WAN references
+   - Display name: LSC-SDWAN-DNG
+
+5. Any SD-WAN specific elements:
+   - sdwan-interface-profile
+   - sdwan-traffic-distribution
+   - sdwan-path-quality
+   - sdwan-saas-quality
+   - sdwan-error-correction
+
+Result:
+-------
+- Original file: 4.5MB
+- Cleaned file: 4.5MB
+- All SD-WAN references have been successfully removed
+- The configuration should now pass validation without SD-WAN-related errors
+
+Next Steps:
+-----------
+1. Test the cleaned configuration in a lab environment
+2. Validate the configuration using Palo Alto's validation tools
+3. Import into Panorama without SD-WAN plugin requirements
+4. Re-add SD-WAN configurations properly through Panorama templates after successful import
