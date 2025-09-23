@@ -3,6 +3,7 @@ import json
 import urllib3
 from typing import Dict, Optional, Any
 import logging
+from datetime import datetime
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -159,6 +160,425 @@ class ArubaClient:
         else:
             self.logger.error("Failed to apply configuration")
             return False
+
+    def apply_configuration_multi_level(self, levels: list = None) -> bool:
+        """Apply configuration at multiple hierarchy levels for better AP coverage"""
+        if levels is None:
+            # Try common hierarchy levels
+            levels = ["/md", "/mm", "/md/campus", "/md/campus/building"]
+        
+        success_count = 0
+        failed_levels = []
+        
+        for level in levels:
+            try:
+                self.logger.info(f"Applying configuration at level: {level}")
+                result = self.execute_command("apply profile all", config_path=level)
+                
+                if result and result.get("_global_result", {}).get("status") == "0":
+                    self.logger.info(f"Configuration applied successfully at {level}")
+                    success_count += 1
+                else:
+                    # Check if level exists
+                    status = result.get("_global_result", {}).get("status_str", "Unknown error")
+                    if "Invalid config path" in status or "not found" in status:
+                        self.logger.debug(f"Level {level} does not exist, skipping")
+                    else:
+                        self.logger.warning(f"Failed to apply configuration at {level}: {status}")
+                        failed_levels.append(level)
+            except Exception as e:
+                self.logger.error(f"Error applying configuration at {level}: {str(e)}")
+                failed_levels.append(level)
+        
+        if failed_levels:
+            self.logger.warning(f"Failed to apply at levels: {failed_levels}")
+        
+        return success_count > 0
+
+    def get_all_ap_groups(self) -> list:
+        """Get all AP groups in the system"""
+        ap_groups = []
+        result = self.get_ap_groups()
+        
+        if result and result.get("_data"):
+            data = result.get("_data", [])
+            # Parse AP group names from output
+            for line in data:
+                if isinstance(line, str) and line.strip() and "Name" not in line and "---" not in line:
+                    parts = line.split()
+                    if parts:
+                        ap_groups.append(parts[0])
+        
+        return ap_groups
+
+    def update_ssid_password_for_ap_group(self, ssid_profile: str, new_password: str, 
+                                         ap_group: str, config_path: str = "/md") -> bool:
+        """Update SSID password for a specific AP group"""
+        config_commands = [
+            f"ap-group {ap_group}",
+            f"wlan ssid-profile {ssid_profile}",
+            f"wpa-passphrase {new_password}",
+            "exit",
+            "exit"
+        ]
+        
+        for command in config_commands:
+            result = self.execute_command(command, config_path=config_path)
+            
+            if not result or result.get("_global_result", {}).get("status") != "0":
+                error_msg = result.get("_global_result", {}).get("status_str", "Unknown error") if result else "No response"
+                self.logger.error(f"Failed to execute command '{command}': {error_msg}")
+                return False
+                
+        self.logger.info(f"Successfully updated password for {ssid_profile} in AP group {ap_group}")
+        return True
+
+    def update_ssid_password_all_groups(self, ssid_profile: str, new_password: str) -> dict:
+        """Update SSID password across all AP groups"""
+        results = {
+            'total_groups': 0,
+            'successful_groups': [],
+            'failed_groups': [],
+            'skipped_groups': []
+        }
+        
+        # Get all AP groups
+        ap_groups = self.get_all_ap_groups()
+        results['total_groups'] = len(ap_groups)
+        
+        if not ap_groups:
+            self.logger.warning("No AP groups found")
+            return results
+        
+        self.logger.info(f"Found {len(ap_groups)} AP groups to update")
+        
+        for ap_group in ap_groups:
+            self.logger.info(f"Updating password for AP group: {ap_group}")
+            
+            # Check if SSID profile exists in this AP group
+            group_config = self.execute_command(f"show ap-group {ap_group}")
+            
+            if group_config and ssid_profile in str(group_config.get("_data", [])):
+                if self.update_ssid_password_for_ap_group(ssid_profile, new_password, ap_group):
+                    results['successful_groups'].append(ap_group)
+                else:
+                    results['failed_groups'].append(ap_group)
+            else:
+                self.logger.debug(f"SSID profile {ssid_profile} not found in AP group {ap_group}, skipping")
+                results['skipped_groups'].append(ap_group)
+        
+        return results
+
+    def get_current_password(self, ssid_profile: str, config_path: str = "/md") -> Optional[str]:
+        """Get current password for an SSID profile using show run no-encrypt"""
+        try:
+            # Get unencrypted configuration for the SSID profile
+            command = f"show run no-encrypt wlan ssid-profile {ssid_profile}"
+            result = self.execute_command(command, config_path=config_path)
+            
+            if not result or not result.get("_data"):
+                self.logger.error(f"Failed to get configuration for {ssid_profile}")
+                return None
+            
+            # Parse the output to find wpa-passphrase
+            data = result.get("_data", [])
+            for line in data:
+                if isinstance(line, str) and "wpa-passphrase" in line:
+                    # Extract password from line like "wpa-passphrase MyPassword123"
+                    parts = line.strip().split()
+                    if len(parts) >= 2:
+                        # Join all parts after 'wpa-passphrase' in case password has spaces
+                        password = ' '.join(parts[1:])
+                        self.logger.debug(f"Found current password for {ssid_profile}")
+                        return password
+            
+            self.logger.warning(f"No wpa-passphrase found for {ssid_profile}")
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Error getting current password: {str(e)}")
+            return None
+
+    def verify_password_change(self, ssid_profile: str, expected_password: str, config_path: str = "/md") -> dict:
+        """Verify password was changed correctly by checking configuration"""
+        verification_result = {
+            'ssid': ssid_profile,
+            'expected_password': expected_password,
+            'current_password': None,
+            'password_match': False,
+            'verification_status': 'failed'
+        }
+        
+        try:
+            # Get current password from configuration
+            current_password = self.get_current_password(ssid_profile, config_path)
+            verification_result['current_password'] = current_password
+            
+            if current_password is None:
+                verification_result['verification_status'] = 'no_password_found'
+            elif current_password == expected_password:
+                verification_result['password_match'] = True
+                verification_result['verification_status'] = 'success'
+                self.logger.info(f"Password verification successful for {ssid_profile}")
+            else:
+                self.logger.warning(f"Password mismatch for {ssid_profile}. Expected: {expected_password}, Found: {current_password}")
+                verification_result['verification_status'] = 'mismatch'
+                
+            return verification_result
+            
+        except Exception as e:
+            self.logger.error(f"Error verifying password change: {str(e)}")
+            verification_result['verification_status'] = 'error'
+            return verification_result
+
+    def verify_password_update(self, ssid_profile: str) -> dict:
+        """Verify password was updated across all APs"""
+        verification_results = {
+            'total_aps': 0,
+            'online_aps': 0,
+            'offline_aps': [],
+            'config_pending_aps': []
+        }
+        
+        # Get all APs
+        ap_result = self.execute_command("show ap database")
+        
+        if not ap_result or not ap_result.get("_data"):
+            self.logger.error("Failed to get AP database")
+            return verification_results
+        
+        # Parse AP database
+        data = ap_result.get("_data", [])
+        for line in data:
+            if isinstance(line, str) and line.strip() and not any(x in line for x in ["Name", "---", "Total"]):
+                parts = line.split()
+                if len(parts) >= 4:  # Typical format: name, ip, group, model, status
+                    ap_name = parts[0]
+                    ap_status = parts[-1] if len(parts) > 4 else "Unknown"
+                    
+                    verification_results['total_aps'] += 1
+                    
+                    if "Up" in ap_status or "Active" in ap_status:
+                        verification_results['online_aps'] += 1
+                    else:
+                        verification_results['offline_aps'].append(ap_name)
+        
+        # Check for pending configurations
+        pending_result = self.execute_command("show ap config pending")
+        
+        if pending_result and pending_result.get("_data"):
+            data = pending_result.get("_data", [])
+            for line in data:
+                if isinstance(line, str) and line.strip() and not any(x in line for x in ["AP Name", "---"]):
+                    parts = line.split()
+                    if parts:
+                        verification_results['config_pending_aps'].append(parts[0])
+        
+        return verification_results
+
+    def force_config_sync(self) -> bool:
+        """Force configuration synchronization to all APs"""
+        try:
+            # Synchronize AP database
+            sync_result = self.execute_command("apdatabase synchronize")
+            
+            if sync_result and sync_result.get("_global_result", {}).get("status") == "0":
+                self.logger.info("AP database synchronization initiated")
+                return True
+            else:
+                self.logger.error("Failed to synchronize AP database")
+                return False
+        except Exception as e:
+            self.logger.error(f"Error during configuration sync: {str(e)}")
+            return False
+
+    def reboot_ap_group(self, ap_group: str) -> bool:
+        """Reboot all APs in a specific group"""
+        try:
+            reboot_command = f"ap-reboot ap-group {ap_group}"
+            result = self.execute_command(reboot_command)
+            
+            if result and result.get("_global_result", {}).get("status") == "0":
+                self.logger.info(f"Reboot initiated for AP group: {ap_group}")
+                return True
+            else:
+                self.logger.error(f"Failed to reboot AP group: {ap_group}")
+                return False
+        except Exception as e:
+            self.logger.error(f"Error rebooting AP group {ap_group}: {str(e)}")
+            return False
+
+    def audit_ssid_passwords(self, ssid_list: list = None) -> dict:
+        """Audit passwords for specified SSIDs or all SSIDs"""
+        audit_results = {
+            'total_ssids': 0,
+            'ssids_with_passwords': [],
+            'ssids_without_passwords': [],
+            'audit_errors': [],
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        try:
+            # If no SSID list provided, get all SSID profiles
+            if not ssid_list:
+                ssid_profiles_result = self.get_all_ssid_profiles()
+                if ssid_profiles_result and ssid_profiles_result.get("_data"):
+                    ssid_list = []
+                    data = ssid_profiles_result.get("_data", [])
+                    for line in data:
+                        if isinstance(line, str) and "Profile Name" not in line and line.strip():
+                            parts = line.split()
+                            if parts:
+                                ssid_list.append(parts[0])
+                
+                if not ssid_list:
+                    self.logger.warning("No SSID profiles found for audit")
+                    return audit_results
+            
+            audit_results['total_ssids'] = len(ssid_list)
+            
+            for ssid in ssid_list:
+                try:
+                    current_password = self.get_current_password(ssid)
+                    
+                    if current_password:
+                        audit_results['ssids_with_passwords'].append({
+                            'ssid': ssid,
+                            'password': current_password,
+                            'password_length': len(current_password)
+                        })
+                        self.logger.debug(f"Audit: {ssid} has password (length: {len(current_password)})")
+                    else:
+                        audit_results['ssids_without_passwords'].append(ssid)
+                        self.logger.warning(f"Audit: {ssid} has no password or unable to retrieve")
+                        
+                except Exception as e:
+                    error_msg = f"Error auditing {ssid}: {str(e)}"
+                    audit_results['audit_errors'].append(error_msg)
+                    self.logger.error(error_msg)
+            
+            return audit_results
+            
+        except Exception as e:
+            self.logger.error(f"Error during password audit: {str(e)}")
+            audit_results['audit_errors'].append(f"General audit error: {str(e)}")
+            return audit_results
+
+    def audit_ap_group_passwords(self, ap_group: str = None) -> dict:
+        """Audit passwords for SSIDs in specific AP group or all groups"""
+        audit_results = {
+            'ap_groups_audited': [],
+            'total_ssids_found': 0,
+            'ssid_password_map': {},
+            'audit_errors': [],
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        try:
+            # Get AP groups to audit
+            groups_to_audit = []
+            if ap_group:
+                groups_to_audit = [ap_group]
+            else:
+                groups_to_audit = self.get_all_ap_groups()
+            
+            if not groups_to_audit:
+                self.logger.warning("No AP groups found for audit")
+                return audit_results
+            
+            for group in groups_to_audit:
+                try:
+                    # Get AP group configuration
+                    group_config = self.execute_command(f"show ap-group {group}")
+                    
+                    if group_config and group_config.get("_data"):
+                        group_ssids = []
+                        data = group_config.get("_data", [])
+                        
+                        # Parse SSID profiles from AP group config
+                        for line in data:
+                            if isinstance(line, str) and "ssid-profile" in line:
+                                parts = line.strip().split()
+                                for i, part in enumerate(parts):
+                                    if part == "ssid-profile" and i + 1 < len(parts):
+                                        ssid_name = parts[i + 1]
+                                        if ssid_name not in group_ssids:
+                                            group_ssids.append(ssid_name)
+                        
+                        # Audit passwords for SSIDs in this group
+                        for ssid in group_ssids:
+                            current_password = self.get_current_password(ssid)
+                            if current_password:
+                                if ssid not in audit_results['ssid_password_map']:
+                                    audit_results['ssid_password_map'][ssid] = {
+                                        'password': current_password,
+                                        'ap_groups': []
+                                    }
+                                audit_results['ssid_password_map'][ssid]['ap_groups'].append(group)
+                                audit_results['total_ssids_found'] += 1
+                        
+                        audit_results['ap_groups_audited'].append({
+                            'group': group,
+                            'ssids_found': group_ssids
+                        })
+                        
+                except Exception as e:
+                    error_msg = f"Error auditing AP group {group}: {str(e)}"
+                    audit_results['audit_errors'].append(error_msg)
+                    self.logger.error(error_msg)
+            
+            return audit_results
+            
+        except Exception as e:
+            self.logger.error(f"Error during AP group audit: {str(e)}")
+            audit_results['audit_errors'].append(f"General AP group audit error: {str(e)}")
+            return audit_results
+
+    def generate_password_report(self, ssid_list: list = None, include_ap_groups: bool = True) -> dict:
+        """Generate comprehensive password audit report"""
+        from datetime import datetime
+        
+        report = {
+            'report_metadata': {
+                'generated_at': datetime.now().isoformat(),
+                'controller_ip': self.controller_ip,
+                'report_type': 'password_audit'
+            },
+            'ssid_audit': {},
+            'ap_group_audit': {},
+            'summary': {
+                'total_ssids_audited': 0,
+                'ssids_with_passwords': 0,
+                'ssids_without_passwords': 0,
+                'total_ap_groups': 0,
+                'audit_errors': 0
+            }
+        }
+        
+        try:
+            # Audit SSID passwords
+            ssid_audit = self.audit_ssid_passwords(ssid_list)
+            report['ssid_audit'] = ssid_audit
+            
+            # Update summary
+            report['summary']['total_ssids_audited'] = ssid_audit['total_ssids']
+            report['summary']['ssids_with_passwords'] = len(ssid_audit['ssids_with_passwords'])
+            report['summary']['ssids_without_passwords'] = len(ssid_audit['ssids_without_passwords'])
+            report['summary']['audit_errors'] += len(ssid_audit['audit_errors'])
+            
+            # Audit AP group passwords if requested
+            if include_ap_groups:
+                ap_group_audit = self.audit_ap_group_passwords()
+                report['ap_group_audit'] = ap_group_audit
+                report['summary']['total_ap_groups'] = len(ap_group_audit['ap_groups_audited'])
+                report['summary']['audit_errors'] += len(ap_group_audit['audit_errors'])
+            
+            return report
+            
+        except Exception as e:
+            self.logger.error(f"Error generating password report: {str(e)}")
+            report['summary']['audit_errors'] += 1
+            return report
 
     def __enter__(self):
         self.login()

@@ -1,0 +1,51 @@
+# Enhanced Aruba WiFi Automation Configuration
+# This configuration includes all new features for better AP coverage
+
+aruba:
+  controller_ip: 192.168.1.1
+  username: admin
+  password: password
+  api_version: v1
+
+wifi:
+  ssids: 
+    - Guest-WiFi
+    - Corporate-WiFi
+  password_length: 12
+  password_options:
+    include_uppercase: true
+    include_lowercase: true
+    include_digits: true
+    include_special: false
+    exclude_ambiguous: true
+
+automation:
+  # File management
+  password_file: config/passwords.csv
+  password_file_format: csv  # csv or json
+  save_passwords: true
+  backup_passwords: true
+  backup_directory: backups
+  
+  # Update modes and features
+  update_mode: all_groups  # 'standard' or 'all_groups' - all_groups ensures all AP groups are updated
+  multi_level_apply: true  # Apply configuration at multiple hierarchy levels (/md, /mm, etc.)
+  force_sync: true         # Force AP database synchronization after updates
+  verify_updates: true     # Verify password was applied to all APs
+  verify_password_change: true  # Verify password changes using 'show run no-encrypt'
+  reboot_pending_groups: false  # Reboot AP groups with pending configurations (use with caution)
+  
+  # Retry settings
+  max_retries: 3
+  retry_delay: 30  # seconds
+
+schedule:
+  enabled: false
+  frequency: daily  # daily, weekly, or monthly
+  time: "02:00"     # 24-hour format
+  day_of_week: monday  # For weekly schedule
+  day_of_month: 1      # For monthly schedule
+
+# Logging
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
