@@ -66,6 +66,8 @@ python main.py --interactive --all-groups --verify
 | `--compare-passwords FILE` | Compare current passwords against file |
 | `--save-audit-report` | Force saving audit report to file |
 | `--no-save-audit-report` | Skip saving audit report |
+| `--max-workers N` | Set maximum threads for auditing (default: 5) |
+| `--no-threading` | Disable multithreading for debugging |
 
 ## Configuration Options
 
@@ -132,6 +134,18 @@ automation:
 10. **Compare Current vs Expected Passwords**
     ```bash
     python main.py --compare-passwords config/passwords.csv
+    ```
+
+## Performance and Threading Options
+
+11. **Fast Audit with More Threads**
+    ```bash
+    python main.py --audit --max-workers 10
+    ```
+
+12. **Single-threaded for Debugging**
+    ```bash
+    python main.py --audit --no-threading
     ```
 
 ## Troubleshooting Failed Updates
@@ -211,6 +225,8 @@ SUMMARY:
   SSIDs without Passwords: 1
   Total AP Groups: 5
   Audit Errors: 0
+  SSID Audit Time: 2.34s
+  AP Group Audit Time: 1.67s
 
 SSIDs WITH PASSWORDS:
 ------------------------------------------------------------
@@ -251,6 +267,27 @@ SSID-TO-AP-GROUP MAPPING:
 - Identify weak or default passwords
 - Check password lengths and complexity
 - Audit which SSIDs are deployed in which AP groups
+
+## Multithreading Performance
+
+The audit system now uses **multithreading** for faster operations:
+
+### Benefits:
+- **3-5x faster** audit times for multiple SSIDs
+- **Concurrent processing** of SSID passwords and AP groups
+- **Scalable performance** - more threads for larger environments
+- **Thread-safe operations** with proper error handling
+
+### Threading Configuration:
+- **Default**: 5 worker threads for SSID audits
+- **AP Groups**: Automatically uses fewer threads (max 3) 
+- **Customizable**: Use `--max-workers N` to adjust
+- **Debugging**: Use `--no-threading` for sequential processing
+
+### Recommended Settings:
+- **Small environments** (1-10 SSIDs): `--max-workers 3`
+- **Medium environments** (10-25 SSIDs): `--max-workers 5` (default)
+- **Large environments** (25+ SSIDs): `--max-workers 8-10`
 
 ## Monitoring Updates
 

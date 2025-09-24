@@ -11,6 +11,7 @@ import json
 
 from .aruba_client import ArubaClient
 from .password_manager import PasswordManager
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class WiFiAutomation:
@@ -382,7 +383,8 @@ class WiFiAutomation:
 
     def audit_passwords(self, selected_ssids: List[str] = None, 
                        include_ap_groups: bool = True,
-                       save_report: bool = True) -> dict:
+                       save_report: bool = True,
+                       max_workers: int = 5) -> dict:
         """Audit current passwords without making changes"""
         aruba_config = self.config['aruba']
         
@@ -406,10 +408,11 @@ class WiFiAutomation:
                     ssid_list = self.config['wifi']['ssids']
                 # If ssid_list is None, audit_ssid_passwords will audit all SSIDs
                 
-                # Generate comprehensive audit report
+                # Generate comprehensive audit report with threading options
                 report = client.generate_password_report(
                     ssid_list=ssid_list,
-                    include_ap_groups=include_ap_groups
+                    include_ap_groups=include_ap_groups,
+                    max_workers=max_workers
                 )
                 
                 # Display audit results
@@ -444,6 +447,14 @@ class WiFiAutomation:
         print(f"  SSIDs without Passwords: {summary.get('ssids_without_passwords', 0)}")
         print(f"  Total AP Groups: {summary.get('total_ap_groups', 0)}")
         print(f"  Audit Errors: {summary.get('audit_errors', 0)}")
+        
+        # Show processing times if available
+        ssid_audit = report.get('ssid_audit', {})
+        ap_group_audit = report.get('ap_group_audit', {})
+        if ssid_audit.get('processing_time_seconds'):
+            print(f"  SSID Audit Time: {ssid_audit['processing_time_seconds']}s")
+        if ap_group_audit.get('processing_time_seconds'):
+            print(f"  AP Group Audit Time: {ap_group_audit['processing_time_seconds']}s")
         
         # SSID Details
         ssid_audit = report.get('ssid_audit', {})
@@ -509,16 +520,48 @@ class WiFiAutomation:
         except Exception as e:
             self.logger.error(f"Failed to save audit report: {str(e)}")
 
-    def compare_passwords(self, expected_passwords: List[Dict[str, str]]) -> dict:
-        """Compare current passwords against expected passwords"""
+    def _compare_single_password(self, client: ArubaClient, entry: Dict[str, str]) -> dict:
+        """Thread-safe method to compare a single password"""
+        ssid = entry['ssid']
+        expected_password = entry['password']
+        
+        result = {
+            'ssid': ssid,
+            'expected': expected_password,
+            'current': None,
+            'status': 'error'
+        }
+        
+        try:
+            current_password = client.get_current_password(ssid)
+            result['current'] = current_password
+            
+            if current_password is None:
+                result['status'] = 'missing'
+            elif current_password == expected_password:
+                result['status'] = 'match'
+            else:
+                result['status'] = 'mismatch'
+                
+        except Exception as e:
+            result['error'] = str(e)
+            self.logger.error(f"[Thread] Error comparing {ssid}: {str(e)}")
+        
+        return result
+
+    def compare_passwords(self, expected_passwords: List[Dict[str, str]], max_workers: int = 5) -> dict:
+        """Compare current passwords against expected passwords using multithreading"""
         aruba_config = self.config['aruba']
         comparison_results = {
             'matches': [],
             'mismatches': [],
             'missing_ssids': [],
             'audit_errors': [],
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'processing_time_seconds': 0
         }
+        
+        start_time = datetime.now()
         
         try:
             with ArubaClient(
@@ -532,36 +575,55 @@ class WiFiAutomation:
                     self.logger.error("Failed to authenticate to Aruba controller")
                     return comparison_results
                 
-                for entry in expected_passwords:
-                    ssid = entry['ssid']
-                    expected_password = entry['password']
-                    
-                    try:
-                        current_password = client.get_current_password(ssid)
-                        
-                        if current_password is None:
-                            comparison_results['missing_ssids'].append(ssid)
-                        elif current_password == expected_password:
-                            comparison_results['matches'].append({
-                                'ssid': ssid,
-                                'password': current_password
-                            })
-                        else:
-                            comparison_results['mismatches'].append({
-                                'ssid': ssid,
-                                'expected': expected_password,
-                                'current': current_password
-                            })
-                            
-                    except Exception as e:
-                        error_msg = f"Error comparing {ssid}: {str(e)}"
-                        comparison_results['audit_errors'].append(error_msg)
-                        self.logger.error(error_msg)
+                # Limit max_workers to reasonable number
+                max_workers = min(max_workers, len(expected_passwords), 8)
                 
+                self.logger.info(f"Starting threaded password comparison of {len(expected_passwords)} SSIDs with {max_workers} workers")
+                
+                # Use ThreadPoolExecutor for concurrent password comparison
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    # Submit all comparison tasks
+                    future_to_entry = {executor.submit(self._compare_single_password, client, entry): entry 
+                                      for entry in expected_passwords}
+                    
+                    # Process completed tasks as they finish
+                    for future in as_completed(future_to_entry):
+                        entry = future_to_entry[future]
+                        try:
+                            result = future.result()
+                            
+                            if result['status'] == 'match':
+                                comparison_results['matches'].append({
+                                    'ssid': result['ssid'],
+                                    'password': result['current']
+                                })
+                            elif result['status'] == 'mismatch':
+                                comparison_results['mismatches'].append({
+                                    'ssid': result['ssid'],
+                                    'expected': result['expected'],
+                                    'current': result['current']
+                                })
+                            elif result['status'] == 'missing':
+                                comparison_results['missing_ssids'].append(result['ssid'])
+                            else:  # error
+                                error_msg = f"Error comparing {result['ssid']}: {result.get('error', 'Unknown error')}"
+                                comparison_results['audit_errors'].append(error_msg)
+                                
+                        except Exception as e:
+                            error_msg = f"Thread execution error for {entry['ssid']}: {str(e)}"
+                            comparison_results['audit_errors'].append(error_msg)
+                            self.logger.error(error_msg)
+                
+                # Calculate processing time
+                end_time = datetime.now()
+                processing_time = (end_time - start_time).total_seconds()
+                comparison_results['processing_time_seconds'] = round(processing_time, 2)
+                
+                self.logger.info(f"Completed threaded password comparison in {processing_time:.2f} seconds")
                 return comparison_results
                 
         except Exception as e:
-            self.logger.error(f"Error during password comparison: {str(e)}")
+            self.logger.error(f"Error during threaded password comparison: {str(e)}")
             comparison_results['audit_errors'].append(f"General comparison error: {str(e)}")
             return comparison_results
 
@@ -705,6 +767,8 @@ def main():
     parser.add_argument('--compare-passwords', help='Compare current passwords against file')
     parser.add_argument('--save-audit-report', action='store_true', help='Save audit report to file')
     parser.add_argument('--no-save-audit-report', action='store_true', help='Skip saving audit report')
+    parser.add_argument('--max-workers', type=int, default=5, help='Maximum number of threads for auditing (default: 5)')
+    parser.add_argument('--no-threading', action='store_true', help='Disable multithreading for debugging')
     
     args = parser.parse_args()
     
@@ -753,11 +817,15 @@ def main():
         if args.save_audit_report:
             save_report = True
         
-        print("🔍 Starting password audit...")
+        # Configure threading options
+        max_workers = 1 if args.no_threading else args.max_workers
+        
+        print(f"🔍 Starting password audit with {max_workers} worker(s)...")
         automation.audit_passwords(
             selected_ssids=selected_ssids,
             include_ap_groups=include_ap_groups,
-            save_report=save_report
+            save_report=save_report,
+            max_workers=max_workers
         )
     
     elif args.compare_passwords:
@@ -770,8 +838,9 @@ def main():
                 expected_passwords = automation.password_manager.load_from_json(file_path)
             
             if expected_passwords:
-                print("🔍 Comparing current passwords against expected values...")
-                results = automation.compare_passwords(expected_passwords)
+                max_workers = 1 if args.no_threading else args.max_workers
+                print(f"🔍 Comparing current passwords against expected values with {max_workers} worker(s)...")
+                results = automation.compare_passwords(expected_passwords, max_workers=max_workers)
                 
                 print("\n" + "="*60)
                 print("PASSWORD COMPARISON RESULTS")

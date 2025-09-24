@@ -1,9 +1,11 @@
 import requests
 import json
 import urllib3
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 import logging
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -408,15 +410,48 @@ class ArubaClient:
             self.logger.error(f"Error rebooting AP group {ap_group}: {str(e)}")
             return False
 
-    def audit_ssid_passwords(self, ssid_list: list = None) -> dict:
-        """Audit passwords for specified SSIDs or all SSIDs"""
+    def _audit_single_ssid(self, ssid: str) -> dict:
+        """Thread-safe method to audit a single SSID password"""
+        result = {
+            'ssid': ssid,
+            'success': False,
+            'password': None,
+            'password_length': 0,
+            'error': None
+        }
+        
+        try:
+            current_password = self.get_current_password(ssid)
+            
+            if current_password:
+                result.update({
+                    'success': True,
+                    'password': current_password,
+                    'password_length': len(current_password)
+                })
+                self.logger.debug(f"[Thread] Audit: {ssid} has password (length: {len(current_password)})")
+            else:
+                result['error'] = "No password found or unable to retrieve"
+                self.logger.warning(f"[Thread] Audit: {ssid} has no password or unable to retrieve")
+                
+        except Exception as e:
+            result['error'] = str(e)
+            self.logger.error(f"[Thread] Error auditing {ssid}: {str(e)}")
+        
+        return result
+
+    def audit_ssid_passwords(self, ssid_list: list = None, max_workers: int = 5) -> dict:
+        """Audit passwords for specified SSIDs or all SSIDs using multithreading"""
         audit_results = {
             'total_ssids': 0,
             'ssids_with_passwords': [],
             'ssids_without_passwords': [],
             'audit_errors': [],
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'processing_time_seconds': 0
         }
+        
+        start_time = datetime.now()
         
         try:
             # If no SSID list provided, get all SSID profiles
@@ -437,42 +472,112 @@ class ArubaClient:
             
             audit_results['total_ssids'] = len(ssid_list)
             
-            for ssid in ssid_list:
-                try:
-                    current_password = self.get_current_password(ssid)
-                    
-                    if current_password:
-                        audit_results['ssids_with_passwords'].append({
-                            'ssid': ssid,
-                            'password': current_password,
-                            'password_length': len(current_password)
-                        })
-                        self.logger.debug(f"Audit: {ssid} has password (length: {len(current_password)})")
-                    else:
-                        audit_results['ssids_without_passwords'].append(ssid)
-                        self.logger.warning(f"Audit: {ssid} has no password or unable to retrieve")
-                        
-                except Exception as e:
-                    error_msg = f"Error auditing {ssid}: {str(e)}"
-                    audit_results['audit_errors'].append(error_msg)
-                    self.logger.error(error_msg)
+            # Limit max_workers to reasonable number and available SSIDs
+            max_workers = min(max_workers, len(ssid_list), 10)
             
+            self.logger.info(f"Starting threaded audit of {len(ssid_list)} SSIDs with {max_workers} workers")
+            
+            # Use ThreadPoolExecutor for concurrent password auditing
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all audit tasks
+                future_to_ssid = {executor.submit(self._audit_single_ssid, ssid): ssid 
+                                 for ssid in ssid_list}
+                
+                # Process completed tasks as they finish
+                for future in as_completed(future_to_ssid):
+                    ssid = future_to_ssid[future]
+                    try:
+                        result = future.result()
+                        
+                        if result['success']:
+                            audit_results['ssids_with_passwords'].append({
+                                'ssid': result['ssid'],
+                                'password': result['password'],
+                                'password_length': result['password_length']
+                            })
+                        else:
+                            audit_results['ssids_without_passwords'].append(result['ssid'])
+                            if result['error']:
+                                audit_results['audit_errors'].append(f"{result['ssid']}: {result['error']}")
+                                
+                    except Exception as e:
+                        error_msg = f"Thread execution error for {ssid}: {str(e)}"
+                        audit_results['audit_errors'].append(error_msg)
+                        self.logger.error(error_msg)
+            
+            # Calculate processing time
+            end_time = datetime.now()
+            processing_time = (end_time - start_time).total_seconds()
+            audit_results['processing_time_seconds'] = round(processing_time, 2)
+            
+            self.logger.info(f"Completed threaded audit in {processing_time:.2f} seconds")
             return audit_results
             
         except Exception as e:
-            self.logger.error(f"Error during password audit: {str(e)}")
+            self.logger.error(f"Error during threaded password audit: {str(e)}")
             audit_results['audit_errors'].append(f"General audit error: {str(e)}")
             return audit_results
 
-    def audit_ap_group_passwords(self, ap_group: str = None) -> dict:
-        """Audit passwords for SSIDs in specific AP group or all groups"""
+    def _audit_single_ap_group(self, group: str) -> dict:
+        """Thread-safe method to audit a single AP group"""
+        result = {
+            'group': group,
+            'success': False,
+            'ssids_found': [],
+            'ssid_passwords': {},
+            'error': None
+        }
+        
+        try:
+            # Get AP group configuration
+            group_config = self.execute_command(f"show ap-group {group}")
+            
+            if group_config and group_config.get("_data"):
+                group_ssids = []
+                data = group_config.get("_data", [])
+                
+                # Parse SSID profiles from AP group config
+                for line in data:
+                    if isinstance(line, str) and "ssid-profile" in line:
+                        parts = line.strip().split()
+                        for i, part in enumerate(parts):
+                            if part == "ssid-profile" and i + 1 < len(parts):
+                                ssid_name = parts[i + 1]
+                                if ssid_name not in group_ssids:
+                                    group_ssids.append(ssid_name)
+                
+                result['ssids_found'] = group_ssids
+                
+                # Get passwords for each SSID in this group
+                for ssid in group_ssids:
+                    try:
+                        current_password = self.get_current_password(ssid)
+                        if current_password:
+                            result['ssid_passwords'][ssid] = current_password
+                    except Exception as e:
+                        self.logger.warning(f"[Thread] Error getting password for {ssid} in group {group}: {str(e)}")
+                
+                result['success'] = True
+                self.logger.debug(f"[Thread] AP Group {group}: Found {len(group_ssids)} SSIDs")
+                
+        except Exception as e:
+            result['error'] = str(e)
+            self.logger.error(f"[Thread] Error auditing AP group {group}: {str(e)}")
+        
+        return result
+
+    def audit_ap_group_passwords(self, ap_group: str = None, max_workers: int = 3) -> dict:
+        """Audit passwords for SSIDs in specific AP group or all groups using multithreading"""
         audit_results = {
             'ap_groups_audited': [],
             'total_ssids_found': 0,
             'ssid_password_map': {},
             'audit_errors': [],
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'processing_time_seconds': 0
         }
+        
+        start_time = datetime.now()
         
         try:
             # Get AP groups to audit
@@ -486,55 +591,62 @@ class ArubaClient:
                 self.logger.warning("No AP groups found for audit")
                 return audit_results
             
-            for group in groups_to_audit:
-                try:
-                    # Get AP group configuration
-                    group_config = self.execute_command(f"show ap-group {group}")
-                    
-                    if group_config and group_config.get("_data"):
-                        group_ssids = []
-                        data = group_config.get("_data", [])
+            # Limit max_workers to reasonable number
+            max_workers = min(max_workers, len(groups_to_audit), 5)
+            
+            self.logger.info(f"Starting threaded AP group audit of {len(groups_to_audit)} groups with {max_workers} workers")
+            
+            # Use ThreadPoolExecutor for concurrent AP group auditing
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all AP group audit tasks
+                future_to_group = {executor.submit(self._audit_single_ap_group, group): group 
+                                  for group in groups_to_audit}
+                
+                # Process completed tasks as they finish
+                for future in as_completed(future_to_group):
+                    group = future_to_group[future]
+                    try:
+                        result = future.result()
                         
-                        # Parse SSID profiles from AP group config
-                        for line in data:
-                            if isinstance(line, str) and "ssid-profile" in line:
-                                parts = line.strip().split()
-                                for i, part in enumerate(parts):
-                                    if part == "ssid-profile" and i + 1 < len(parts):
-                                        ssid_name = parts[i + 1]
-                                        if ssid_name not in group_ssids:
-                                            group_ssids.append(ssid_name)
-                        
-                        # Audit passwords for SSIDs in this group
-                        for ssid in group_ssids:
-                            current_password = self.get_current_password(ssid)
-                            if current_password:
+                        if result['success']:
+                            # Add to audited groups
+                            audit_results['ap_groups_audited'].append({
+                                'group': result['group'],
+                                'ssids_found': result['ssids_found']
+                            })
+                            
+                            # Process SSID password mappings
+                            for ssid, password in result['ssid_passwords'].items():
                                 if ssid not in audit_results['ssid_password_map']:
                                     audit_results['ssid_password_map'][ssid] = {
-                                        'password': current_password,
+                                        'password': password,
                                         'ap_groups': []
                                     }
-                                audit_results['ssid_password_map'][ssid]['ap_groups'].append(group)
+                                audit_results['ssid_password_map'][ssid]['ap_groups'].append(result['group'])
                                 audit_results['total_ssids_found'] += 1
-                        
-                        audit_results['ap_groups_audited'].append({
-                            'group': group,
-                            'ssids_found': group_ssids
-                        })
-                        
-                except Exception as e:
-                    error_msg = f"Error auditing AP group {group}: {str(e)}"
-                    audit_results['audit_errors'].append(error_msg)
-                    self.logger.error(error_msg)
+                        else:
+                            if result['error']:
+                                audit_results['audit_errors'].append(f"{result['group']}: {result['error']}")
+                                
+                    except Exception as e:
+                        error_msg = f"Thread execution error for AP group {group}: {str(e)}"
+                        audit_results['audit_errors'].append(error_msg)
+                        self.logger.error(error_msg)
             
+            # Calculate processing time
+            end_time = datetime.now()
+            processing_time = (end_time - start_time).total_seconds()
+            audit_results['processing_time_seconds'] = round(processing_time, 2)
+            
+            self.logger.info(f"Completed threaded AP group audit in {processing_time:.2f} seconds")
             return audit_results
             
         except Exception as e:
-            self.logger.error(f"Error during AP group audit: {str(e)}")
+            self.logger.error(f"Error during threaded AP group audit: {str(e)}")
             audit_results['audit_errors'].append(f"General AP group audit error: {str(e)}")
             return audit_results
 
-    def generate_password_report(self, ssid_list: list = None, include_ap_groups: bool = True) -> dict:
+    def generate_password_report(self, ssid_list: list = None, include_ap_groups: bool = True, max_workers: int = 5) -> dict:
         """Generate comprehensive password audit report"""
         from datetime import datetime
         
@@ -556,8 +668,8 @@ class ArubaClient:
         }
         
         try:
-            # Audit SSID passwords
-            ssid_audit = self.audit_ssid_passwords(ssid_list)
+            # Audit SSID passwords with threading
+            ssid_audit = self.audit_ssid_passwords(ssid_list, max_workers=max_workers)
             report['ssid_audit'] = ssid_audit
             
             # Update summary
@@ -566,9 +678,11 @@ class ArubaClient:
             report['summary']['ssids_without_passwords'] = len(ssid_audit['ssids_without_passwords'])
             report['summary']['audit_errors'] += len(ssid_audit['audit_errors'])
             
-            # Audit AP group passwords if requested
+            # Audit AP group passwords if requested with threading
             if include_ap_groups:
-                ap_group_audit = self.audit_ap_group_passwords()
+                # Use fewer workers for AP groups as they're more complex
+                ap_group_workers = min(max_workers // 2, 3) if max_workers > 1 else 1
+                ap_group_audit = self.audit_ap_group_passwords(max_workers=ap_group_workers)
                 report['ap_group_audit'] = ap_group_audit
                 report['summary']['total_ap_groups'] = len(ap_group_audit['ap_groups_audited'])
                 report['summary']['audit_errors'] += len(ap_group_audit['audit_errors'])
