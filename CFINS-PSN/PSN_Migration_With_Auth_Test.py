@@ -47,45 +47,30 @@ def create_results_dir():
     
     return results_dir
 
-def get_psn01_psn06_commands(psn01_tacacs_key, psn01_radius_key, psn06_tacacs_key, psn06_radius_key):
-    """Get PSN01 and PSN06 configuration commands"""
+def get_psn_commands(server_name, server_ip, tacacs_key, radius_key):
+    """Get PSN server configuration commands"""
     return [
-        # PSN01 TACACS server
-        "tacacs server PVA-M-ISE-PSN01",
-        " address ipv4 172.18.31.100",
-        f" key {psn01_tacacs_key}",
+        # TACACS server
+        f"tacacs server {server_name}",
+        f" address ipv4 {server_ip}",
+        f" key {tacacs_key}",
         " timeout 10",
         "exit",
         
-        # PSN01 RADIUS server
-        "radius server PVA-M-ISE-PSN01-R",
-        " address ipv4 172.18.31.100 auth-port 1645 acct-port 1646",
-        f" key {psn01_radius_key}",
-        "exit",
-        
-        # PSN06 TACACS server
-        "tacacs server PVA-M-ISE-PSN06",
-        " address ipv4 172.18.31.101",
-        f" key {psn06_tacacs_key}",
-        " timeout 10",
-        "exit",
-        
-        # PSN06 RADIUS server
-        "radius server PVA-M-ISE-PSN06-R",
-        " address ipv4 172.18.31.101 auth-port 1645 acct-port 1646",
-        f" key {psn06_radius_key}",
+        # RADIUS server
+        f"radius server {server_name}-R",
+        f" address ipv4 {server_ip} auth-port 1645 acct-port 1646",
+        f" key {radius_key}",
         "exit",
         
         # Add to TACACS+ group
         "aaa group server tacacs+ ISE-TACACS",
-        " server name PVA-M-ISE-PSN01",
-        " server name PVA-M-ISE-PSN06",
+        f" server name {server_name}",
         "exit",
         
         # Add to RADIUS group
         "aaa group server radius ISE-RADIUS",
-        " server name PVA-M-ISE-PSN01-R",
-        " server name PVA-M-ISE-PSN06-R",
+        f" server name {server_name}-R",
         "exit"
     ]
 
@@ -155,10 +140,10 @@ def test_tacacs_authentication(net_connect, device_ip):
         # Get server IP addresses from configuration
         server_ips = get_server_ips(net_connect)
         
-        # Test each configured server
+        # Test each configured server (skip PSN05 since we're migrating away from it)
         test_results = {}
         for server_name, server_ip in server_ips.items():
-            if 'PSN01' in server_name or 'PSN06' in server_name:
+            if 'PSN05' not in server_name:  # Test any PSN server except PSN05
                 print(f"      Testing {server_name} ({server_ip})...")
                 test_cmd = f"test aaa group ISE-TACACS server {server_ip} testuser testpass legacy"
                 output = net_connect.send_command(test_cmd, delay_factor=2)
@@ -167,7 +152,7 @@ def test_tacacs_authentication(net_connect, device_ip):
                 success = "successfully authenticated" in output.lower() or "User was successfully authenticated" in output
                 test_results[server_name] = {'ip': server_ip, 'success': success, 'output': output}
         
-        # Check if any PSN01/PSN06 servers are working
+        # Check if any non-PSN05 servers are working
         working_servers = [name for name, result in test_results.items() if result['success']]
         
         if working_servers:
@@ -270,7 +255,7 @@ def check_psn05_present(net_connect):
 
 def main():
     print("=== PSN Migration Tool with Authentication Testing ===")
-    print("Adds PSN01/PSN06, tests auth, removes PSN05 only if tests pass\n")
+    print("Adds new PSN server, tests auth, removes PSN05 only if tests pass\n")
     
     log_filename = setup_logging()
     results_dir = create_results_dir()
@@ -280,31 +265,22 @@ def main():
     username = input("Enter SSH username: ").strip()
     password = getpass("Enter SSH password: ")
     
-    # Get PSN01 keys
-    print("\n=== Enter PSN01 Server Keys ===")
-    print("Enter TACACS+ key for PSN01 server (172.18.31.100):")
-    psn01_tacacs_key = getpass("PSN01 TACACS+ key: ")
+    # Get PSN server details
+    print("\n=== Enter PSN Server Details ===")
+    server_name = input("Enter PSN server name (e.g., PVA-M-ISE-PSN06): ").strip()
+    server_ip = input("Enter PSN server IP address: ").strip()
     
-    print("Enter RADIUS key for PSN01-R server:")
-    print("(Press Enter to use the same key as PSN01 TACACS+)")
-    psn01_radius_key = getpass("PSN01 RADIUS key: ")
+    # Get server keys
+    print(f"\n=== Enter Keys for {server_name} ===")
+    tacacs_key = getpass(f"TACACS+ key for {server_name}: ")
     
-    if not psn01_radius_key:
-        print("Using PSN01 TACACS+ key for RADIUS")
-        psn01_radius_key = psn01_tacacs_key
+    print(f"RADIUS key for {server_name}-R:")
+    print("(Press Enter to use the same key as TACACS+)")
+    radius_key = getpass("RADIUS key: ")
     
-    # Get PSN06 keys
-    print("\n=== Enter PSN06 Server Keys ===")
-    print("Enter TACACS+ key for PSN06 server (172.18.31.101):")
-    psn06_tacacs_key = getpass("PSN06 TACACS+ key: ")
-    
-    print("Enter RADIUS key for PSN06-R server:")
-    print("(Press Enter to use the same key as PSN06 TACACS+)")
-    psn06_radius_key = getpass("PSN06 RADIUS key: ")
-    
-    if not psn06_radius_key:
-        print("Using PSN06 TACACS+ key for RADIUS")
-        psn06_radius_key = psn06_tacacs_key
+    if not radius_key:
+        print("Using TACACS+ key for RADIUS")
+        radius_key = tacacs_key
     
     # Get device list
     print("\nSelect device list file:")
@@ -327,9 +303,9 @@ def main():
     print(f"\nLoaded {len(devices)} devices")
     
     # Get PSN commands
-    psn_commands = get_psn01_psn06_commands(
-        psn01_tacacs_key, psn01_radius_key, 
-        psn06_tacacs_key, psn06_radius_key
+    psn_commands = get_psn_commands(
+        server_name, server_ip,
+        tacacs_key, radius_key
     )
     
     # Results tracking
