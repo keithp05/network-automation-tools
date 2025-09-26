@@ -1,0 +1,116 @@
+# CFINS Aruba Controllers Configuration
+# Add your username and password for each controller
+
+controllers:
+  - name: "CFINS Controller 133.10"
+    ip: "172.19.133.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 115.10"
+    ip: "172.19.115.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 102.10"
+    ip: "172.19.102.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 70.10"
+    ip: "172.19.70.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 86.10"
+    ip: "172.19.86.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 162.10"
+    ip: "172.19.162.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 172.10"
+    ip: "172.19.172.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 74.10"
+    ip: "172.19.74.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 120.10"
+    ip: "172.19.120.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 101.10"
+    ip: "172.19.101.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 140.10"
+    ip: "172.19.140.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 184.10"
+    ip: "172.19.184.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 100.10"
+    ip: "172.19.100.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 164.10"
+    ip: "172.19.164.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 134.10"
+    ip: "172.19.134.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 108.10"
+    ip: "172.19.108.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 72.10"
+    ip: "172.19.72.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 137.10"
+    ip: "172.19.137.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 173.10"
+    ip: "172.19.173.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+    
+  - name: "CFINS Controller 117.10"
+    ip: "172.19.117.10"
+    username: "YOUR_USERNAME"
+    password: "YOUR_PASSWORD"
+
+guest_wifi:
+  # The exact SSID name for guest WiFi (case sensitive)
+  ssid_name: "CF_GUEST"
+  
+  # Password generation options
+  password_length: 12
+  password_options:
+    include_uppercase: true
+    include_lowercase: true
+    include_digits: true
+    include_special: false      # Set to true if you want special characters
+    exclude_ambiguous: true     # Excludes confusing characters like 0,O,l,1
