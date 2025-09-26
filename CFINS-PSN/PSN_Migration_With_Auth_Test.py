@@ -97,18 +97,28 @@ def get_psn_commands_modern(server_name, server_ip, tacacs_key, radius_key):
 def detect_tacacs_format(net_connect):
     """Detect which TACACS server format the device supports"""
     try:
-        # Try to enter config mode and test a tacacs server command
-        net_connect.config_mode()
-        test_output = net_connect.send_command("tacacs server ?", expect_string=r"[#>]", delay_factor=1)
-        net_connect.exit_config_mode()
+        # Check existing config to see what format is already in use
+        show_output = net_connect.send_command("show run | sec tacacs server")
         
-        if "Invalid" in test_output or "Unrecognized" in test_output:
+        if "tacacs server " in show_output and "address ipv4" in show_output:
+            # Modern format detected in running config
+            return "modern"
+        elif "tacacs-server host" in show_output:
+            # Legacy format detected in running config
             return "legacy"
         else:
-            return "modern"
+            # No existing tacacs servers, test which format works
+            net_connect.config_mode()
+            test_output = net_connect.send_command("tacacs server ?", expect_string=r"[#>]", delay_factor=1)
+            net_connect.exit_config_mode()
+            
+            if "Invalid" in test_output or "Unrecognized" in test_output:
+                return "legacy"
+            else:
+                return "modern"
     except:
-        # Default to legacy if we can't determine
-        return "legacy"
+        # Default to modern since most current devices support it
+        return "modern"
 
 def get_psn05_removal_commands():
     """Commands to remove PSN05 from any device"""
