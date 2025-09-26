@@ -217,10 +217,10 @@ class PasswordManager:
 
 class MultiControllerGuestWiFi:
     def __init__(self, config_file: str = "config/multi_controllers.yaml"):
-        self.config = self.load_config(config_file)
         self.setup_logging()
-        self.password_manager = PasswordManager()
         self.logger = logging.getLogger(__name__)
+        self.config = self.load_config(config_file)
+        self.password_manager = PasswordManager()
         self.guest_ssid = self.config.get('guest_wifi', {}).get('ssid_name', 'Guest-WiFi')
 
     def setup_logging(self):
@@ -293,7 +293,7 @@ class MultiControllerGuestWiFi:
             with open(config_path, 'w') as f:
                 yaml.dump(default_config, f, default_flow_style=False)
                 
-            self.logger.warning(f"Created default config at {config_path}. Please update with your controllers.")
+            print(f"WARNING: Created default config at {config_path}. Please update with your controllers.")
             return default_config
         
         with open(config_path, 'r') as f:
