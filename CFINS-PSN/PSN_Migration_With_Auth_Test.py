@@ -130,7 +130,7 @@ def get_server_ips(net_connect):
         logging.error(f"Error getting server IPs: {e}")
         return {}
 
-def test_tacacs_authentication(net_connect, device_ip):
+def test_tacacs_authentication(net_connect, device_ip, test_username, test_password):
     """
     Test TACACS+ authentication by checking AAA test command
     Returns: (success, details)
@@ -145,7 +145,7 @@ def test_tacacs_authentication(net_connect, device_ip):
         for server_name, server_ip in server_ips.items():
             if 'PSN05' not in server_name:  # Test any PSN server except PSN05
                 print(f"      Testing {server_name} ({server_ip})...")
-                test_cmd = f"test aaa group ISE-TACACS server {server_ip} testuser testpass legacy"
+                test_cmd = f"test aaa group ISE-TACACS server {server_ip} {test_username} {test_password} legacy"
                 output = net_connect.send_command(test_cmd, delay_factor=2)
                 
                 # Check if authentication was successful
@@ -282,25 +282,42 @@ def main():
         print("Using TACACS+ key for RADIUS")
         radius_key = tacacs_key
     
-    # Get device list
-    print("\nSelect device list file:")
+    # Get test credentials for authentication testing
+    print(f"\n=== Enter Test Credentials for Authentication Testing ===")
+    print("These credentials will be used to test if the PSN servers are working:")
+    test_username = input("Test username: ").strip()
+    test_password = getpass("Test password: ")
+    
+    # Get audit results file
+    print("\nSelect audit results JSON file (from audit script):")
     root = tk.Tk()
     root.withdraw()
-    device_file = filedialog.askopenfilename(
-        title="Select device list file",
-        filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+    audit_file = filedialog.askopenfilename(
+        title="Select audit results JSON file",
+        filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
     )
     root.destroy()
     
-    if not device_file:
-        print("No device file selected. Exiting.")
+    if not audit_file:
+        print("No audit file selected. Exiting.")
         return
     
-    # Load devices
-    with open(device_file, 'r') as f:
-        devices = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+    # Load audit results
+    with open(audit_file, 'r') as f:
+        audit_data = json.load(f)
     
-    print(f"\nLoaded {len(devices)} devices")
+    # Get devices that need migration (have missing configs or auth failures)
+    devices_to_migrate = []
+    for device_ip, result in audit_data.items():
+        if result.get('connection_status') == 'success':
+            # Check if device needs PSN06 or has auth issues
+            auth_tests = result.get('auth_tests', {})
+            psn06_auth = auth_tests.get('PSN06', {}).get('auth_test', 'fail')
+            if psn06_auth != 'pass' or not result.get('psn06_present', False):
+                devices_to_migrate.append(device_ip)
+    
+    devices = devices_to_migrate
+    print(f"\nFound {len(devices)} devices that need migration from audit results")
     
     # Get PSN commands
     psn_commands = get_psn_commands(
@@ -367,7 +384,7 @@ def main():
                 
                 # Step 3: Test authentication
                 print("  Step 3: Testing authentication...")
-                tacacs_ok, tacacs_details = test_tacacs_authentication(net_connect, device_ip)
+                tacacs_ok, tacacs_details = test_tacacs_authentication(net_connect, device_ip, test_username, test_password)
                 radius_ok, radius_details = test_radius_authentication(net_connect, device_ip)
                 
                 auth_passed = tacacs_ok and radius_ok
