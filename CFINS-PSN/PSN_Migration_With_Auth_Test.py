@@ -192,11 +192,16 @@ def test_tacacs_authentication(net_connect, device_ip, test_username, test_passw
             if 'PSN05' not in server_name:  # Test any PSN server except PSN05
                 print(f"      Testing {server_name} ({server_ip})...")
                 test_cmd = f"test aaa group ISE-TACACS server {server_ip} {test_username} {test_password} legacy"
-                output = net_connect.send_command(test_cmd, delay_factor=2)
+                logging.info(f"Auth test command: {test_cmd}")
+                output = net_connect.send_command(test_cmd, delay_factor=3)
+                logging.info(f"Auth test output: {output}")
+                print(f"        Command: {test_cmd}")
+                print(f"        Output: {output}")
                 
                 # Check if authentication was successful
                 success = "successfully authenticated" in output.lower() or "User was successfully authenticated" in output
                 test_results[server_name] = {'ip': server_ip, 'success': success, 'output': output}
+                print(f"        Result: {'PASS' if success else 'FAIL'}")
         
         # Check if any non-PSN05 servers are working
         working_servers = [name for name, result in test_results.items() if result['success']]
