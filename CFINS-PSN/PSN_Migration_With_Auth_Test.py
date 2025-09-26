@@ -47,32 +47,68 @@ def create_results_dir():
     
     return results_dir
 
-def get_psn_commands(server_name, server_ip, tacacs_key, radius_key):
-    """Get PSN server configuration commands"""
+def get_psn_commands_legacy(server_name, server_ip, tacacs_key, radius_key):
+    """Get PSN server configuration commands using legacy format"""
     return [
-        # TACACS server
+        # Legacy TACACS server format
+        f"tacacs-server host {server_ip} key {tacacs_key}",
+        
+        # Legacy RADIUS server format  
+        f"radius-server host {server_ip} auth-port 1645 acct-port 1646 key {radius_key}",
+        
+        # Add to TACACS+ group using IP
+        "aaa group server tacacs+ ISE-TACACS",
+        f" server {server_ip}",
+        "exit",
+        
+        # Add to RADIUS group using IP
+        "aaa group server radius ISE-RADIUS", 
+        f" server {server_ip} auth-port 1645 acct-port 1646",
+        "exit"
+    ]
+
+def get_psn_commands_modern(server_name, server_ip, tacacs_key, radius_key):
+    """Get PSN server configuration commands using modern format"""
+    return [
+        # Modern TACACS server format
         f"tacacs server {server_name}",
         f" address ipv4 {server_ip}",
         f" key {tacacs_key}",
         " timeout 10",
         "exit",
         
-        # RADIUS server
+        # Modern RADIUS server format
         f"radius server {server_name}-R",
         f" address ipv4 {server_ip} auth-port 1645 acct-port 1646",
         f" key {radius_key}",
         "exit",
         
-        # Add to TACACS+ group
+        # Add to TACACS+ group using server name
         "aaa group server tacacs+ ISE-TACACS",
         f" server name {server_name}",
         "exit",
         
-        # Add to RADIUS group
+        # Add to RADIUS group using server name
         "aaa group server radius ISE-RADIUS",
         f" server name {server_name}-R",
         "exit"
     ]
+
+def detect_tacacs_format(net_connect):
+    """Detect which TACACS server format the device supports"""
+    try:
+        # Try to enter config mode and test a tacacs server command
+        net_connect.config_mode()
+        test_output = net_connect.send_command("tacacs server ?", expect_string=r"[#>]", delay_factor=1)
+        net_connect.exit_config_mode()
+        
+        if "Invalid" in test_output or "Unrecognized" in test_output:
+            return "legacy"
+        else:
+            return "modern"
+    except:
+        # Default to legacy if we can't determine
+        return "legacy"
 
 def get_psn05_removal_commands():
     """Commands to remove PSN05 from any device"""
@@ -319,11 +355,8 @@ def main():
     devices = devices_to_migrate
     print(f"\nFound {len(devices)} devices that need migration from audit results")
     
-    # Get PSN commands
-    psn_commands = get_psn_commands(
-        server_name, server_ip,
-        tacacs_key, radius_key
-    )
+    # PSN commands will be determined per device based on supported format
+    # (moved to device loop to detect format per device)
     
     # Results tracking
     results = {
@@ -370,10 +403,18 @@ def main():
                 net_connect.disconnect()
                 continue
             
-            # Step 1: Add PSN01 + PSN06
-            print("  Step 1: Adding PSN01 and PSN06 configurations...")
+            # Step 1: Detect format and get appropriate PSN commands
+            print("  Step 1: Detecting device format and adding PSN configurations...")
+            tacacs_format = detect_tacacs_format(net_connect)
+            print(f"    Detected TACACS format: {tacacs_format}")
+            
+            if tacacs_format == "modern":
+                psn_commands = get_psn_commands_modern(server_name, server_ip, tacacs_key, radius_key)
+            else:
+                psn_commands = get_psn_commands_legacy(server_name, server_ip, tacacs_key, radius_key)
+            
             if apply_config_commands(net_connect, psn_commands):
-                print("  ✓ PSN01 and PSN06 configured")
+                print(f"  ✓ PSN server {server_name} configured using {tacacs_format} format")
                 device_result['psn_added'] = True
                 results['psn_added'].append(device_ip)
                 
