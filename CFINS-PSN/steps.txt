@@ -1,0 +1,73 @@
+CHIPPLANSW01#sh run | sec aaa
+aaa new-model
+aaa group server radius C&F
+ server 172.18.28.90 auth-port 1812 acct-port 1813
+ server 172.18.66.92 auth-port 1812 acct-port 1813
+aaa group server tacacs+ ISE-TACACS
+ server name PVA-M-ISE-PSN05
+ server name PVA-M-ISE-PSN06
+aaa group server radius ISE-RADIUS
+ server name PVA-M-ISE-PSN06-R
+ server name PVA-M-ISE-PSN05-R
+ deadtime 1
+aaa authentication login default line
+aaa authentication login vty_security group RAD1 line
+aaa authentication login con_security group RAD1 line
+aaa authentication login ISE group ISE-TACACS group RAD1 line
+aaa authentication enable default enable
+aaa authentication dot1x default group ISE-RADIUS
+aaa authentication dot1x WIRELESS group radius
+aaa authorization config-commands
+aaa authorization exec default none 
+aaa authorization exec ISE group ISE-TACACS none 
+aaa authorization commands 0 ISE group ISE-TACACS none 
+aaa authorization commands 1 ISE group ISE-TACACS none 
+aaa authorization commands 7 ISE group ISE-TACACS none 
+aaa authorization commands 15 ISE group ISE-TACACS none 
+aaa authorization network default group ISE-RADIUS 
+aaa accounting update periodic 1440
+aaa accounting auth-proxy default start-stop group ISE-RADIUS
+aaa accounting dot1x default start-stop group ISE-RADIUS
+aaa accounting exec default
+ action-type start-stop
+ group radius
+aaa accounting exec ISE start-stop group ISE-TACACS
+aaa accounting commands 0 ISE start-stop group ISE-TACACS
+aaa accounting commands 1 ISE start-stop group ISE-TACACS
+aaa accounting commands 7 ISE start-stop group ISE-TACACS
+aaa accounting commands 15 ISE start-stop group ISE-TACACS
+aaa accounting network default start-stop group ISE-RADIUS
+aaa accounting system default start-stop group ISE-RADIUS
+aaa server radius policy-device
+aaa server radius dynamic-author
+ client 172.18.31.102 server-key 7 0528204E136D6A582C363C4132
+ client 172.18.31.101 server-key 7 072C070D7C283D542221205F3D
+ auth-type any
+aaa session-id common
+CHIPPLANSW01#sh run | sec  tacacs
+aaa group server tacacs+ ISE-TACACS
+ server name PVA-M-ISE-PSN05
+ server name PVA-M-ISE-PSN06
+tacacs server PVA-M-ISE-PSN05
+ address ipv4 172.18.31.102
+ key 7 15312D4D300B08050B001E712A
+ timeout 10
+tacacs server PVA-M-ISE-PSN06
+ address ipv4 172.18.31.101
+ key 7 132631533F2D270B081703600C
+ timeout 10
+CHIPPLANSW01#tes
+CHIPPLANSW01#test aaa gr
+CHIPPLANSW01#test aaa group ISE-TACACS se
+CHIPPLANSW01#test aaa group ISE-TACACS server 172.18.31.101 Kperez1_NW F6Zqrv&BMEDdX l
+CHIPPLANSW01#test aaa group ISE-TACACS server 172.18.31.101 Kperez1_NW F6Zqrv&BMEDdX legacy 
+Attempting authentication test to server-group ISE-TACACS using tacacs+
+User was successfully authenticated.
+
+CHIPPLANSW01#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+CHIPPLANSW01(config)#no tacacs server PVA-M-ISE-PSN05
+CHIPPLANSW01(config)#aaa group server tacacs+ ISE-TACACS
+CHIPPLANSW01(config-sg-tacacs+)#no server name PVA-M-ISE-PSN05
+CHIPPLANSW01(config-sg-tacacs+)#end
+CHIPPLANSW01#wr
