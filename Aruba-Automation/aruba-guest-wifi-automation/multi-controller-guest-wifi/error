@@ -1,0 +1,65 @@
+264. .\OneDrive - United States Fire Insurance Company\Documents\Scripts\Config generator\dist\config_inputs_v3.13.1.yml
+265. .\OneDrive - United States Fire Insurance Company\Documents\Scripts\Wifi\config\Multi-Controller Guest WiFi Config.yml
+266. config\multi_controllers.yaml
+
+📋 Enter the number of the config file to use (or 'q' to quit):
+Your choice: 265
+
+✅ Using config file: .\OneDrive - United States Fire Insurance Company\Documents\Scripts\Wifi\config\Multi-Controller Guest WiFi Config.yml
+
+
+🔍 Auditing CF_GUEST across 20 controllers...
+
+2025-09-26 17:33:22 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.86.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:22 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.115.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:22 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.70.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:22 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.133.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:22 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.162.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:22 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.172.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.120.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: Expecting value: line 1 column 1 (char 0)
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.101.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.140.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.184.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.108.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.134.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.72.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.137.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: Expecting value: line 1 column 1 (char 0)
+2025-09-26 17:33:23 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.173.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:24 - __main__ - ERROR - Login request failed: HTTPSConnectionPool(host='172.19.164.10', port=4343): Max retries exceeded with url: /api/login (Caused by SSLError(SSLError(1, '[SSL: UNSAFE_LEGACY_RENEGOTIATION_DISABLED] unsafe legacy renegotiation disabled (_ssl.c:1006)')))
+2025-09-26 17:33:24 - __main__ - ERROR - Login request failed: Expecting value: line 1 column 1 (char 0)
+2025-09-26 17:33:25 - __main__ - ERROR - Login request failed: Expecting value: line 1 column 1 (char 0)
+================================================================================
+GUEST WIFI AUDIT RESULTS - CF_GUEST
+================================================================================
+Controller                     IP                   Current Password     Status
+--------------------------------------------------------------------------------
+CFINS Controller 86.10         172.19.86.10         ERROR                ✗ Failed to authenticate
+CFINS Controller 115.10        172.19.115.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 70.10         172.19.70.10         ERROR                ✗ Failed to authenticate
+CFINS Controller 133.10        172.19.133.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 162.10        172.19.162.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 172.10        172.19.172.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 120.10        172.19.120.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 102.10        172.19.102.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 101.10        172.19.101.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 140.10        172.19.140.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 184.10        172.19.184.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 108.10        172.19.108.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 134.10        172.19.134.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 72.10         172.19.72.10         ERROR                ✗ Failed to authenticate
+CFINS Controller 137.10        172.19.137.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 100.10        172.19.100.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 173.10        172.19.173.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 164.10        172.19.164.10        ERROR                ✗ Failed to authenticate
+CFINS Controller 74.10         172.19.74.10         ERROR                ✗ Failed to authenticate
+CFINS Controller 117.10        172.19.117.10        ERROR                ✗ Failed to authenticate
+================================================================================
+
+Summary:
+  Total controllers: 20
+  Controllers with CF_GUEST: 0
+  Unique passwords found: 0
+
+❌ No controllers have CF_GUEST configured
