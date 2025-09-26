@@ -1,0 +1,13 @@
+-------------------------------------------------------
+error logs
+      Applying: tacacs server PVA-M-ISE-PSN06
+2025-09-25 20:45:12,893 - ERROR - Command error for 'tacacs server PVA-M-ISE-PSN06':  tacacs server PVA-M-ISE-PSN06
+                             ^
+% Invalid command at '^' marker.
+
+        ERROR:  tacacs server PVA-M-ISE-PSN06
+                             ^
+% Invalid command at '^' marker.
+
+2025-09-25 20:45:12,893 - ERROR - Config mode failed: Configuration command failed: tacacs server PVA-M-ISE-PSN06
+--------------------------------------------------
