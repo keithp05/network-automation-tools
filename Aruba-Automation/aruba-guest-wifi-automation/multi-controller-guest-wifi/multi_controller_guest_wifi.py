@@ -602,9 +602,11 @@ class MultiControllerGuestWiFi:
 
 def main():
     import argparse
+    import os
+    from pathlib import Path
     
     parser = argparse.ArgumentParser(description='Multi-Controller Aruba Guest WiFi Management')
-    parser.add_argument('-c', '--config', default='config/multi_controllers.yaml', 
+    parser.add_argument('-c', '--config', 
                        help='Path to multi-controller config file')
     parser.add_argument('--audit-only', action='store_true', 
                        help='Only audit passwords, do not update')
@@ -613,7 +615,83 @@ def main():
     
     args = parser.parse_args()
     
-    manager = MultiControllerGuestWiFi(config_file=args.config)
+    # If no config specified, help user find one
+    config_file = args.config
+    
+    if not config_file:
+        print("\n🔍 Looking for YAML configuration files...\n")
+        
+        # Search for YAML files
+        yaml_files = []
+        search_paths = ['.', 'config', '../config', '../../config']
+        
+        for search_path in search_paths:
+            if os.path.exists(search_path):
+                for root, dirs, files in os.walk(search_path):
+                    for file in files:
+                        if file.endswith(('.yaml', '.yml')) and not file.endswith('.example'):
+                            full_path = os.path.join(root, file)
+                            yaml_files.append(full_path)
+        
+        if not yaml_files:
+            print("❌ No YAML configuration files found!")
+            print("\nPlease either:")
+            print("1. Create a config file from the example")
+            print("2. Specify the path with -c option")
+            print("3. Place your config file in the 'config' folder")
+            return
+        
+        # Display found files
+        print("Found configuration files:")
+        for idx, file in enumerate(yaml_files, 1):
+            print(f"{idx}. {file}")
+        
+        # Also check for .example files
+        example_files = []
+        for search_path in search_paths:
+            if os.path.exists(search_path):
+                for root, dirs, files in os.walk(search_path):
+                    for file in files:
+                        if file.endswith('.example'):
+                            full_path = os.path.join(root, file)
+                            example_files.append(full_path)
+        
+        if example_files:
+            print(f"\n📝 Example files (need to be configured):")
+            for file in example_files:
+                print(f"   - {file}")
+        
+        # Let user select
+        print("\n📋 Enter the number of the config file to use (or 'q' to quit):")
+        choice = input("Your choice: ").strip()
+        
+        if choice.lower() == 'q':
+            print("Exiting...")
+            return
+        
+        try:
+            choice_idx = int(choice) - 1
+            if 0 <= choice_idx < len(yaml_files):
+                config_file = yaml_files[choice_idx]
+                print(f"\n✅ Using config file: {config_file}\n")
+            else:
+                print("❌ Invalid choice!")
+                return
+        except ValueError:
+            print("❌ Invalid input!")
+            return
+    
+    # Check if config file exists
+    if not os.path.exists(config_file):
+        print(f"❌ Config file not found: {config_file}")
+        print("\nCurrent directory:", os.getcwd())
+        print("\nFiles in current directory:")
+        for item in os.listdir('.'):
+            print(f"  - {item}")
+        return
+    
+    # Create manager with selected config
+    manager = MultiControllerGuestWiFi(config_file=config_file)
     
     if args.audit_only:
         # Just audit and display
