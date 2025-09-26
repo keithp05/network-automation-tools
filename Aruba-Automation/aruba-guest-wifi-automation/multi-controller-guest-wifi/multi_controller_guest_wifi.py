@@ -239,13 +239,17 @@ class MultiControllerGuestWiFi:
             }
         ))
         
-        # Ensure logs directory exists
-        Path("logs").mkdir(exist_ok=True)
+        # Get the directory where this script is located
+        import os
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        log_dir = os.path.join(script_dir, 'logs')
         
-        # File logging
-        file_handler = logging.FileHandler(
-            f"logs/multi_controller_guest_wifi_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-        )
+        # Ensure logs directory exists in the same folder as the script
+        os.makedirs(log_dir, exist_ok=True)
+        
+        # File logging - save to script directory
+        log_file_path = os.path.join(log_dir, f"multi_controller_guest_wifi_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+        file_handler = logging.FileHandler(log_file_path)
         file_handler.setFormatter(logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         ))
@@ -585,9 +589,13 @@ class MultiControllerGuestWiFi:
         print(f"✗ Failed: {failed}")
         
         if successful > 0:
-            # Save the new password
+            # Save the new password to logs directory in script location
+            import os
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            log_dir = os.path.join(script_dir, 'logs')
+            
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            password_file = Path("logs") / f"guest_wifi_password_{timestamp}.txt"
+            password_file = os.path.join(log_dir, f"guest_wifi_password_{timestamp}.txt")
             
             with open(password_file, 'w') as f:
                 f.write(f"Guest WiFi Password Update - {timestamp}\n")
