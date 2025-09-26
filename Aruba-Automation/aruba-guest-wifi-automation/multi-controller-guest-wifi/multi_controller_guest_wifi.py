@@ -629,17 +629,33 @@ def main():
     if not config_file:
         print("\n🔍 Looking for YAML configuration files...\n")
         
-        # Search for YAML files
+        # Search for YAML files more efficiently
         yaml_files = []
         search_paths = ['.', 'config', '../config', '../../config']
         
+        # First, get the script directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Add script-relative paths
+        search_paths.extend([
+            os.path.join(script_dir, 'config'),
+            script_dir
+        ])
+        
+        # Remove duplicates and make paths absolute
+        search_paths = list(set([os.path.abspath(p) for p in search_paths if os.path.exists(p)]))
+        
         for search_path in search_paths:
-            if os.path.exists(search_path):
-                for root, dirs, files in os.walk(search_path):
-                    for file in files:
+            try:
+                # Only look in the immediate directory, not subdirectories
+                if os.path.isdir(search_path):
+                    for file in os.listdir(search_path):
                         if file.endswith(('.yaml', '.yml')) and not file.endswith('.example'):
-                            full_path = os.path.join(root, file)
-                            yaml_files.append(full_path)
+                            full_path = os.path.join(search_path, file)
+                            if os.path.isfile(full_path) and full_path not in yaml_files:
+                                yaml_files.append(full_path)
+            except PermissionError:
+                continue
         
         if not yaml_files:
             print("❌ No YAML configuration files found!")
@@ -654,15 +670,18 @@ def main():
         for idx, file in enumerate(yaml_files, 1):
             print(f"{idx}. {file}")
         
-        # Also check for .example files
+        # Also check for .example files in same paths
         example_files = []
         for search_path in search_paths:
-            if os.path.exists(search_path):
-                for root, dirs, files in os.walk(search_path):
-                    for file in files:
+            try:
+                if os.path.isdir(search_path):
+                    for file in os.listdir(search_path):
                         if file.endswith('.example'):
-                            full_path = os.path.join(root, file)
-                            example_files.append(full_path)
+                            full_path = os.path.join(search_path, file)
+                            if os.path.isfile(full_path):
+                                example_files.append(full_path)
+            except PermissionError:
+                continue
         
         if example_files:
             print(f"\n📝 Example files (need to be configured):")
