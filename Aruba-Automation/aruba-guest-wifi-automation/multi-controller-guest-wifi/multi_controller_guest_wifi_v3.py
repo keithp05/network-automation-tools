@@ -204,23 +204,34 @@ def audit_controller(controller_info):
         
         result['connected'] = True
         
-        # Check CF_GUEST config
+        # Check CF_GUEST config first
         cf_guest_output, cf_error = ctrl.get_cf_guest_config()
+        print(f"🔧 DEBUG {ctrl.name}: CF_GUEST check output: {repr(cf_guest_output[:100] if cf_guest_output else None)}")
+        
         if cf_guest_output and "CF_GUEST" in cf_guest_output:
             result['cf_guest_exists'] = True
+            print(f"✅ {ctrl.name}: CF_GUEST found, checking password...")
             
             # Get password
             pwd_output, pwd_error = ctrl.get_passwords()
+            print(f"🔧 DEBUG {ctrl.name}: Password check output: {repr(pwd_output[:100] if pwd_output else None)}")
+            
             if pwd_output and "wpa-passphrase" in pwd_output:
-                # Extract password from line like: " wpa-passphrase Summer2025"
+                # Extract password from line like: " wpa-passphrase Spring2025"
                 for line in pwd_output.split('\n'):
                     if 'wpa-passphrase' in line:
                         parts = line.strip().split()
                         if len(parts) >= 2:
                             result['current_password'] = ' '.join(parts[1:])
+                            print(f"✅ {ctrl.name}: Found password: {result['current_password']}")
                             break
+                if not result['current_password']:
+                    print(f"❌ {ctrl.name}: CF_GUEST found but no password extracted")
+            else:
+                print(f"❌ {ctrl.name}: No wpa-passphrase found in output")
         else:
             result['error'] = "CF_GUEST not configured"
+            print(f"❌ {ctrl.name}: CF_GUEST not found in output")
             
     except Exception as e:
         result['error'] = str(e)
