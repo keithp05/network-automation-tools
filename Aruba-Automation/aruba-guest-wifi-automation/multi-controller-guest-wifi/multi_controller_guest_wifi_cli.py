@@ -95,14 +95,23 @@ class ArubaCLIClient:
             return None, str(e)
     
     def get_current_password(self, ssid_profile: str) -> str:
-        """Get current password using show run no-encrypt - handle Aruba CLI limitations"""
+        """Get current password using show run no-encrypt with proper pipe handling"""
         try:
-            # First, just get the full config for the SSID profile
-            command = f"show run no-encrypt wlan ssid-profile {ssid_profile}"
-            output, error = self.execute_command(command)
+            # Use the correct command that works: show run no-encrypt | include CF_GUEST
+            # Execute this as a shell command to handle the pipe properly
+            command = f"show run no-encrypt | include {ssid_profile}"
+            
+            # Execute the command in a shell-like manner
+            stdin, stdout, stderr = self.ssh.exec_command(command, timeout=30)
+            output = stdout.read().decode('utf-8').strip()
+            error = stderr.read().decode('utf-8').strip()
+            
+            if error and "aborted" not in error.lower():
+                self.logger.warning(f"Command error: {error}")
             
             if output and 'wpa-passphrase' in output:
                 # Parse the output to find wpa-passphrase
+                # Expected format from your test: " wpa-passphrase Summer2025"
                 for line in output.split('\n'):
                     line = line.strip()
                     if 'wpa-passphrase' in line:
@@ -113,27 +122,34 @@ class ArubaCLIClient:
                             self.logger.info(f"Found {ssid_profile} password: {password}")
                             return password
             
-            # If that didn't work, try without no-encrypt
-            fallback_command = f"show running-config wlan ssid-profile {ssid_profile}"
-            output, error = self.execute_command(fallback_command)
+            # If primary command didn't work, try alternative approach
+            # Get the full config and search locally
+            full_config_cmd = "show run no-encrypt"
+            stdin, stdout, stderr = self.ssh.exec_command(full_config_cmd, timeout=60)
+            full_output = stdout.read().decode('utf-8')
             
-            if output and 'wpa-passphrase' in output:
-                for line in output.split('\n'):
+            if full_output and ssid_profile in full_output:
+                # Look for CF_GUEST section in the full output
+                lines = full_output.split('\n')
+                in_cf_guest_section = False
+                
+                for line in lines:
                     line = line.strip()
-                    if 'wpa-passphrase' in line:
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            password = ' '.join(parts[1:])
-                            self.logger.info(f"Found {ssid_profile} password with fallback: {password}")
-                            return password
-            
-            # Last resort - try to see if SSID exists at all
-            check_command = f"show wlan ssid-profile {ssid_profile}"
-            output, error = self.execute_command(check_command)
-            
-            if output and ssid_profile in output:
-                self.logger.warning(f"{ssid_profile} exists but password not readable")
-                return "PASSWORD_EXISTS_BUT_ENCRYPTED"
+                    if f'wlan ssid-profile {ssid_profile}' in line:
+                        in_cf_guest_section = True
+                        continue
+                    
+                    if in_cf_guest_section:
+                        if line.startswith('wlan ssid-profile') and ssid_profile not in line:
+                            # We've moved to a different SSID profile
+                            break
+                        
+                        if 'wpa-passphrase' in line:
+                            parts = line.split()
+                            if len(parts) >= 2:
+                                password = ' '.join(parts[1:])
+                                self.logger.info(f"Found {ssid_profile} password in full config: {password}")
+                                return password
             
             self.logger.warning(f"Could not find {ssid_profile} password")
             return None
