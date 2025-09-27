@@ -193,28 +193,52 @@ def update_password_on_controller(controller_info, ssid_name, new_password):
         
     return result
 
+def select_config_file_gui():
+    """Open file picker GUI to select YAML config file - EXACT SAME AS WORKING VERSION"""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        
+        # Create a hidden root window
+        root = tk.Tk()
+        root.withdraw()  # Hide the main window
+        root.attributes('-topmost', True)  # Bring to front
+        
+        # Show file picker
+        print("📁 Opening file picker for YAML configuration...")
+        file_path = filedialog.askopenfilename(
+            title="Select CFINS Controllers YAML Configuration File",
+            filetypes=[
+                ("YAML files", "*.yaml *.yml"),
+                ("All files", "*.*")
+            ],
+            initialdir=os.getcwd()
+        )
+        
+        root.destroy()  # Clean up
+        
+        if file_path:
+            print(f"✅ Selected: {file_path}")
+            return file_path
+        else:
+            print("❌ No file selected")
+            return None
+    except ImportError:
+        print("❌ GUI not available. Install tkinter or specify config file path.")
+        return None
+
 def load_config(config_file=None):
-    """Load configuration with GUI file picker if needed"""
-    if not config_file:
-        try:
-            import tkinter as tk
-            from tkinter import filedialog
-            
-            root = tk.Tk()
-            root.withdraw()
-            
-            config_file = filedialog.askopenfilename(
-                title="Select Controller Configuration File",
-                filetypes=[("YAML files", "*.yaml *.yml"), ("All files", "*.*")]
-            )
-            root.destroy()
-            
-            if not config_file:
-                print("No file selected")
-                return None
-                
-        except ImportError:
-            print("GUI not available. Please specify config file with -c option")
+    """Load configuration - EXACT SAME LOGIC AS WORKING VERSION"""
+    # If no config file specified, use GUI file picker
+    if not config_file or not os.path.exists(config_file):
+        if config_file:
+            print(f"🔍 Config file not found: {config_file}")
+        
+        selected_file = select_config_file_gui()
+        if selected_file:
+            config_file = selected_file
+        else:
+            print("❌ No configuration file selected")
             return None
     
     try:
