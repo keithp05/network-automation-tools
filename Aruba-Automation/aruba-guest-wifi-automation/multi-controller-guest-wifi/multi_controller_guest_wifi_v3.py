@@ -93,12 +93,30 @@ class ArubaController:
             return False
     
     def execute_command(self, command):
-        """Execute command via SSH"""
+        """Execute command via shell (since exec_command is blocked)"""
         try:
-            stdin, stdout, stderr = self.ssh.exec_command(command, timeout=30)
-            output = stdout.read().decode('utf-8').strip()
-            error = stderr.read().decode('utf-8').strip()
-            return output, error
+            # Use invoke_shell since exec_command is blocked
+            shell = self.ssh.invoke_shell()
+            time.sleep(2)  # Wait for shell to be ready
+            
+            # Clear any initial output
+            if shell.recv_ready():
+                shell.recv(65535)
+            
+            # Send command
+            shell.send(command + "\n")
+            time.sleep(3)  # Give command time to execute
+            
+            # Collect output
+            output = ""
+            while shell.recv_ready():
+                chunk = shell.recv(65535).decode('utf-8', errors='ignore')
+                output += chunk
+                time.sleep(0.1)
+            
+            shell.close()
+            return output, None
+            
         except Exception as e:
             return None, str(e)
     
@@ -113,22 +131,41 @@ class ArubaController:
         return output, error
     
     def update_password(self, new_password):
-        """Update CF_GUEST password"""
-        commands = [
-            "configure terminal",
-            "wlan ssid-profile CF_GUEST",
-            f"wpa-passphrase {new_password}",
-            "exit",
-            "commit apply"
-        ]
-        
-        for cmd in commands:
-            output, error = self.execute_command(cmd)
-            if error and "error" in error.lower():
-                return False, f"Command '{cmd}' failed: {error}"
-            time.sleep(0.5)
-        
-        return True, "Password updated successfully"
+        """Update CF_GUEST password using shell session"""
+        try:
+            # Use one shell session for all commands
+            shell = self.ssh.invoke_shell()
+            time.sleep(2)
+            
+            # Clear initial output
+            if shell.recv_ready():
+                shell.recv(65535)
+            
+            commands = [
+                "configure terminal",
+                "wlan ssid-profile CF_GUEST",
+                f"wpa-passphrase {new_password}",
+                "exit",
+                "commit apply"
+            ]
+            
+            # Send all commands through same shell
+            for cmd in commands:
+                shell.send(cmd + "\n")
+                time.sleep(2)  # Wait between commands
+                
+                # Check for errors
+                if shell.recv_ready():
+                    output = shell.recv(65535).decode('utf-8', errors='ignore')
+                    if "error" in output.lower() or "invalid" in output.lower():
+                        shell.close()
+                        return False, f"Command '{cmd}' failed: {output}"
+            
+            shell.close()
+            return True, "Password updated successfully"
+            
+        except Exception as e:
+            return False, f"Shell error: {str(e)}"
     
     def disconnect(self):
         """Close SSH connection"""
