@@ -1,7 +1,12 @@
-PS C:\Users\KPerez1> & C:/Users/KPerez1/AppData/Local/Microsoft/WindowsApps/python3.11.exe "c:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/run_discovery.py"
+PS C:\Users\KPerez1> & C:/Users/KPerez1/AppData/Local/Microsoft/WindowsApps/python3.11.exe "c:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/run_discovery_auto.py"
 
-🔧 Aruba API Command Discovery
-Testing commands on first CFINS controller...
+🔧 Aruba API Command Discovery (Auto-Config)
+Searching for config file and testing commands...
 
-❌ Config file not found: config/cfins_controllers.yaml
+❌ Config file 'cfins_controllers.yaml' not found!
+Searched in:
+  - config/cfins_controllers.yaml
+  - cfins_controllers.yaml
+  - ../config/cfins_controllers.yaml
+  - ../../config/cfins_controllers.yaml
 PS C:\Users\KPerez1> 
