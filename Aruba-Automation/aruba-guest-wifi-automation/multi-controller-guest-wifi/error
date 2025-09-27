@@ -3,3 +3,11 @@ wlan access-rule CF_GUEST
 wlan ssid-profile CF_GUEST
  essid CF_GUEST
 Centennial_2# 
+---------------------------------------------------------
+Centennial_2# sh run no-encrypt | include wpa-passphrase  
+ wpa-passphrase Summer2025
+Centennial_2# sh run no-encrypt | include CF_GUEST      
+wlan access-rule CF_GUEST
+wlan ssid-profile CF_GUEST
+ essid CF_GUEST
+Centennial_2# 
