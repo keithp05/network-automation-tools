@@ -95,6 +95,9 @@ class ArubaController:
     def execute_command(self, command):
         """Execute command via shell (since exec_command is blocked)"""
         try:
+            # Debug: show exactly what command is being sent
+            print(f"🔧 DEBUG: Executing command: '{command}'")
+            
             # Use invoke_shell since exec_command is blocked
             shell = self.ssh.invoke_shell()
             time.sleep(2)  # Wait for shell to be ready
@@ -115,6 +118,10 @@ class ArubaController:
                 time.sleep(0.1)
             
             shell.close()
+            
+            # Debug: show raw output
+            print(f"🔧 DEBUG: Raw output: {repr(output[:200])}")
+            
             return output, None
             
         except Exception as e:
