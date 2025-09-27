@@ -14,46 +14,117 @@ PS C:\Users\KPerez1> & C:/Users/KPerez1/AppData/Local/Microsoft/WindowsApps/pyth
 
 🔍 Auditing CF_GUEST on 20 controllers...
 
-❌ CFINS Controller 102.10: CF_GUEST not configured
-❌ CFINS Controller 115.10: CF_GUEST not configured
-❌ CFINS Controller 86.10: CF_GUEST not configured
-❌ CFINS Controller 70.10: CF_GUEST not configured
-❌ CFINS Controller 133.10: CF_GUEST not configured
-❌ CFINS Controller 162.10: CF_GUEST not configured
-❌ CFINS Controller 172.10: CF_GUEST not configured
-❌ CFINS Controller 74.10: CF_GUEST not configured
-❌ CFINS Controller 101.10: CF_GUEST not configured
-❌ CFINS Controller 120.10: CF_GUEST not configured
-❌ CFINS Controller 140.10: CF_GUEST not configured
-❌ CFINS Controller 184.10: CF_GUEST not configured
-❌ CFINS Controller 100.10: CF_GUEST not configured
-❌ CFINS Controller 164.10: CF_GUEST not configured
-❌ CFINS Controller 134.10: CF_GUEST not configured
-❌ CFINS Controller 108.10: CF_GUEST not configured
-❌ CFINS Controller 72.10: CF_GUEST not configured
-❌ CFINS Controller 173.10: CF_GUEST not configured
-❌ CFINS Controller 117.10: CF_GUEST not configured
-❌ CFINS Controller 137.10: CF_GUEST not configured
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nf4:2e:7f:ca:8d:84# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n94:b4:0f:c6:78:9c# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nCentennial_2# show run | in CF_GUE'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nf4:2e:7f:ca:8d:84'
+✅ CFINS Controller 102.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n94:b4:0f:c6:78:9c'
+✅ CFINS Controller 115.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nCentennial_2# sho'
+✅ CFINS Controller 133.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n70:3a:0e:ca:dc:60# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n40:e3:d6:c6:eb:36# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nMaster# show run | in CF_GUEST\r\nwl'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n70:3a:0e:ca:dc:60'
+✅ CFINS Controller 70.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n40:e3:d6:c6:eb:36'
+✅ CFINS Controller 86.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nMaster# show run '
+✅ CFINS Controller 162.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n24:f2:7f:c6:27:34# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n94:b4:0f:c6:6e:c2# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: '\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n8c:79:09:c6:b2:84# show run | in CF_GUEST\r\nwlan access-rul'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n24:f2:7f:c6:27:34'
+✅ CFINS Controller 172.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n94:b4:0f:c6:6e:c2'
+✅ CFINS Controller 120.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n8c:79:09:c6:b2:84'
+✅ CFINS Controller 74.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n40:e3:d6:c6:e7:b0# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nJCT-WAP-06# show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n40:e3:d6:c7:03:20# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n40:e3:d6:c6:e7:b0'
+✅ CFINS Controller 101.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nJCT-WAP-06# show '
+✅ CFINS Controller 140.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n40:e3:d6:c7:03:20'
+✅ CFINS Controller 184.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n48:2f:6b:c2:23:ae# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n84:d4:7e:c6:be:be# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n84:d4:7e:c6:3a:fa# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n48:2f:6b:c2:23:ae'
+✅ CFINS Controller 100.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n84:d4:7e:c6:3a:fa'
+✅ CFINS Controller 134.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n84:d4:7e:c6:be:be'
+✅ CFINS Controller 164.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n18:64:72:cb:db:10# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n04:bd:88:cb:15:42# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nW00PPLANSW01-R3# show run | in CF_'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n18:64:72:cb:db:10'
+✅ CFINS Controller 108.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n04:bd:88:cb:15:42'
+✅ CFINS Controller 72.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nW00PPLANSW01-R3# '
+✅ CFINS Controller 137.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Executing command: 'show run | in CF_GUEST'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n84:d4:7e:c6:3f:56# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run | in CF_GUEST\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nf4:2e:7f:ca:a6:7e# show run | in C'
+🔧 DEBUG: Executing command: 'show run no-encrypt | in wpa-passphrase'
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\n84:d4:7e:c6:3f:56'
+✅ CFINS Controller 173.10: run no-encrypt | in wpa-passphrase
+🔧 DEBUG: Raw output: 'show run no-encrypt | in wpa-passphrase\r\n\r\nshow tech-support and show tech-support supplemental are the two most useful outputs to collect for any kind of troubleshooting session.\r\n\r\nf4:2e:7f:ca:a6:7e'
+✅ CFINS Controller 117.10: run no-encrypt | in wpa-passphrase
 
 ============================================================
 AUDIT RESULTS
 ============================================================
 Total controllers: 20
-Working with CF_GUEST: 0
-Unique passwords: 0
-❌ No working controllers found
-PS C:\Users\KPerez1> 
--------------------------------------------------------------------------------
-24:f2:7f:c6:27:34# sh run | include CF_GUEST
-wlan access-rule CF_GUEST
-wlan ssid-profile CF_GUEST
- essid CF_GUEST
-24:f2:7f:c6:27:34# sh run | include wp      
- opmode wpa2-aes
- wpa-passphrase 2af82c49004ac917795d52fff21ded7942facfe9cab47d4a
- opmode wpa2-psk-aes
-24:f2:7f:c6:27:34# sh run no-encrypt | include wp
- opmode wpa2-aes
- wpa-passphrase Spring2025
- opmode wpa2-psk-aes
-24:f2:7f:c6:27:34# 
+Working with CF_GUEST: 20
+Unique passwords: 1
+Current passwords: ['run no-encrypt | in wpa-passphrase']
+
+📋 Options:
+1. Audit only (exit)
+2. Update passwords
+
+Choice (1-2): 1
