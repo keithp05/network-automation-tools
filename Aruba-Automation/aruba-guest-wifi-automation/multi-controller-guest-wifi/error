@@ -1,4 +1,5 @@
-Centennial_2# sh run no-encrypt wlan ssid-profile CF_GUEST
-                                ^
-% Parse error
+Centennial_2# sh run no-encrypt | include CF_GUEST
+wlan access-rule CF_GUEST
+wlan ssid-profile CF_GUEST
+ essid CF_GUEST
 Centennial_2# 
