@@ -95,82 +95,46 @@ class ArubaCLIClient:
             return None, str(e)
     
     def get_current_password(self, ssid_profile: str) -> str:
-        """Get current password using show run no-encrypt with proper approach"""
+        """Get current password using the exact command that works with pipes"""
         try:
-            # First verify CF_GUEST exists
-            check_cmd = f"show run no-encrypt | include {ssid_profile}"
-            stdin, stdout, stderr = self.ssh.exec_command(check_cmd, timeout=30)
-            check_output = stdout.read().decode('utf-8').strip()
+            # Use the exact command format that you showed works:
+            # show run no-encrypt | include CF_GUEST|wpa-passphrase
+            command = f"show run no-encrypt | include {ssid_profile}|wpa-passphrase"
             
-            if ssid_profile not in check_output:
-                self.logger.warning(f"{ssid_profile} not found on this controller")
-                return None
-                
-            # Now get ALL wpa-passphrase entries (since CF_GUEST might be the only guest network)
-            password_cmd = "show run no-encrypt | include wpa-passphrase"
-            stdin, stdout, stderr = self.ssh.exec_command(password_cmd, timeout=30)
-            password_output = stdout.read().decode('utf-8').strip()
+            # Execute the command - pipes DO work fine!
+            stdin, stdout, stderr = self.ssh.exec_command(command, timeout=30)
+            output = stdout.read().decode('utf-8').strip()
             error = stderr.read().decode('utf-8').strip()
             
-            if error and "aborted" not in error.lower():
+            if error and error.lower() != "aborted":
                 self.logger.warning(f"Command error: {error}")
             
-            if password_output:
-                # For now, if CF_GUEST exists and there's only one wpa-passphrase, assume it's CF_GUEST's
-                # This is a reasonable assumption if CF_GUEST is the only guest network
-                for line in password_output.split('\n'):
+            # Expected output format based on your test:
+            # wlan access-rule CF_GUEST
+            # wlan ssid-profile CF_GUEST
+            #  essid CF_GUEST
+            #  wpa-passphrase Summer2025
+            
+            if output and ssid_profile in output:
+                # Parse the output to find wpa-passphrase
+                for line in output.split('\n'):
                     line = line.strip()
                     if 'wpa-passphrase' in line:
-                        # Extract password from line like: " wpa-passphrase Summer2025"
+                        # Extract password from line like: "wpa-passphrase Summer2025"
                         parts = line.split()
                         if len(parts) >= 2:
                             password = ' '.join(parts[1:])  # Handle passwords with spaces
-                            self.logger.info(f"Found password (assuming for {ssid_profile}): {password}")
+                            self.logger.info(f"Found {ssid_profile} password: {password}")
                             return password
-            
-            # Alternative: Get a section of the config around CF_GUEST
-            # This approach gets context lines after finding CF_GUEST
-            section_cmd = f"show run no-encrypt | grep -A 20 'wlan ssid-profile {ssid_profile}'"
-            stdin, stdout, stderr = self.ssh.exec_command(section_cmd, timeout=30)
-            section_output = stdout.read().decode('utf-8').strip()
-            
-            if section_output and 'wpa-passphrase' in section_output:
-                for line in section_output.split('\n'):
-                    line = line.strip()
-                    if 'wpa-passphrase' in line:
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            password = ' '.join(parts[1:])
-                            self.logger.info(f"Found {ssid_profile} password in section: {password}")
-                            return password
-                            
-            # Last resort: Get the entire config and parse it
-            self.logger.info(f"Trying full config parse for {ssid_profile}")
-            full_cmd = "show run no-encrypt"
-            stdin, stdout, stderr = self.ssh.exec_command(full_cmd, timeout=60)
-            full_output = stdout.read().decode('utf-8')
-            
-            if full_output and ssid_profile in full_output:
-                lines = full_output.split('\n')
-                in_cf_guest = False
                 
-                for i, line in enumerate(lines):
-                    if f'wlan ssid-profile {ssid_profile}' in line:
-                        in_cf_guest = True
-                        # Look ahead for wpa-passphrase within the next 20 lines
-                        for j in range(i+1, min(i+21, len(lines))):
-                            if 'wpa-passphrase' in lines[j]:
-                                parts = lines[j].strip().split()
-                                if len(parts) >= 2:
-                                    password = ' '.join(parts[1:])
-                                    self.logger.info(f"Found {ssid_profile} password in full config: {password}")
-                                    return password
-                            elif lines[j].strip() and not lines[j].startswith(' '):
-                                # We've hit a new section
-                                break
+                # CF_GUEST exists but no password found - might be using different auth
+                self.logger.warning(f"{ssid_profile} found but no wpa-passphrase")
+                return None
             
-            self.logger.warning(f"Could not find {ssid_profile} password")
-            return None
+            else:
+                # CF_GUEST doesn't exist on this controller
+                self.logger.warning(f"{ssid_profile} not found on this controller")
+                return None
             
         except Exception as e:
             self.logger.error(f"Error getting current password: {str(e)}")
