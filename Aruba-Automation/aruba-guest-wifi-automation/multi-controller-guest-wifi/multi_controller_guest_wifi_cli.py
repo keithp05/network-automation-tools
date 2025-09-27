@@ -78,26 +78,40 @@ class ArubaCLIClient:
             return None, str(e)
     
     def get_current_password(self, ssid_profile: str) -> str:
-        """Get current password using show run no-encrypt"""
+        """Get current password using show commands"""
         try:
-            command = f"show run no-encrypt wlan ssid-profile {ssid_profile}"
-            output, error = self.execute_command(command)
+            # Try different command variations for different Aruba versions
+            commands_to_try = [
+                f"show run | include ssid-profile {ssid_profile} -A 20",
+                f"show running-config | include ssid-profile {ssid_profile} -A 20", 
+                f"show running-config wlan ssid-profile {ssid_profile}",
+                f"show run wlan ssid-profile {ssid_profile}",
+                "show running-config | include CF_GUEST -A 20",
+                "show run | include CF_GUEST -A 20"
+            ]
             
-            if error:
-                self.logger.warning(f"Command error: {error}")
+            for command in commands_to_try:
+                output, error = self.execute_command(command)
+                
+                if output and 'wpa-passphrase' in output:
+                    # Parse the output to find wpa-passphrase
+                    for line in output.split('\n'):
+                        line = line.strip()
+                        if 'wpa-passphrase' in line:
+                            # Extract password from line like: " wpa-passphrase Summer2025"
+                            parts = line.split()
+                            if len(parts) >= 2:
+                                password = ' '.join(parts[1:])  # Handle passwords with spaces
+                                self.logger.info(f"Found password using command: {command}")
+                                return password
+                
+                # Small delay between command attempts
+                time.sleep(0.2)
             
-            if output:
-                # Parse the output to find wpa-passphrase
-                for line in output.split('\\n'):
-                    line = line.strip()
-                    if 'wpa-passphrase' in line:
-                        # Extract password from line like: "wpa-passphrase MyPassword123"
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            password = ' '.join(parts[1:])  # Handle passwords with spaces
-                            return password
-            
+            # If all commands failed, log what we tried
+            self.logger.warning(f"Could not find {ssid_profile} password with any command")
             return None
+            
         except Exception as e:
             self.logger.error(f"Error getting current password: {str(e)}")
             return None
