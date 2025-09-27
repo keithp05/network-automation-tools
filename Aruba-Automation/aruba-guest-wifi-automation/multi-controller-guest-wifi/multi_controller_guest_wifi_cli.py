@@ -25,6 +25,13 @@ import getpass
 import random
 import string
 import os
+try:
+    import tkinter as tk
+    from tkinter import filedialog
+    from tkinter import messagebox
+    GUI_AVAILABLE = True
+except ImportError:
+    GUI_AVAILABLE = False
 
 class ArubaCLIClient:
     """SSH-based Aruba controller client for CLI commands"""
@@ -206,22 +213,73 @@ class MultiControllerGuestWiFiCLI:
             handlers=[handler, file_handler]
         )
 
+    def select_config_file_gui(self) -> str:
+        """Open file picker GUI to select YAML config file"""
+        if not GUI_AVAILABLE:
+            print("❌ GUI not available. Install tkinter or specify config file path.")
+            return None
+            
+        # Create a hidden root window
+        root = tk.Tk()
+        root.withdraw()  # Hide the main window
+        root.attributes('-topmost', True)  # Bring to front
+        
+        # Show file picker
+        print("📁 Opening file picker for YAML configuration...")
+        file_path = filedialog.askopenfilename(
+            title="Select CFINS Controllers YAML Configuration File",
+            filetypes=[
+                ("YAML files", "*.yaml *.yml"),
+                ("All files", "*.*")
+            ],
+            initialdir=os.getcwd()
+        )
+        
+        root.destroy()  # Clean up
+        
+        if file_path:
+            print(f"✅ Selected: {file_path}")
+            return file_path
+        else:
+            print("❌ No file selected")
+            return None
+
     def load_config(self, config_file: str) -> dict:
-        # Try to find config file
-        possible_paths = [
-            config_file,
-            "cfins_controllers.yaml",
-            "config/cfins_controllers.yaml",
-            os.path.join(os.path.dirname(__file__), "config", "cfins_controllers.yaml")
-        ]
+        # If no config file specified, use GUI file picker
+        if not config_file or not os.path.exists(config_file):
+            print(f"🔍 Config file not found: {config_file}")
+            
+            if GUI_AVAILABLE:
+                selected_file = self.select_config_file_gui()
+                if selected_file:
+                    config_file = selected_file
+                else:
+                    print("❌ No configuration file selected")
+                    return {"controllers": []}
+            else:
+                # Fallback: try to find config file automatically
+                possible_paths = [
+                    "cfins_controllers.yaml",
+                    "config/cfins_controllers.yaml",
+                    os.path.join(os.path.dirname(__file__), "config", "cfins_controllers.yaml")
+                ]
+                
+                for path in possible_paths:
+                    if os.path.exists(path):
+                        config_file = path
+                        break
+                else:
+                    self.logger.error(f"Config file not found. Tried: {possible_paths}")
+                    return {"controllers": []}
         
-        for path in possible_paths:
-            if os.path.exists(path):
-                with open(path, 'r') as f:
-                    return yaml.safe_load(f)
-        
-        self.logger.error(f"Config file not found. Tried: {possible_paths}")
-        return {"controllers": []}
+        try:
+            with open(config_file, 'r') as f:
+                config = yaml.safe_load(f)
+                print(f"✅ Loaded config: {config_file}")
+                return config
+        except Exception as e:
+            self.logger.error(f"Error loading config file: {str(e)}")
+            return {"controllers": []}
 
     def audit_single_controller(self, controller_info: dict) -> dict:
         """Audit a single controller via SSH/CLI"""
@@ -274,7 +332,7 @@ class MultiControllerGuestWiFiCLI:
             self.logger.error("No controllers configured")
             return []
         
-        print(f"\\n🔍 Auditing {self.guest_ssid} via SSH/CLI across {len(controllers)} controllers...\\n")
+        print(f"\n🔍 Auditing {self.guest_ssid} via SSH/CLI across {len(controllers)} controllers...\n")
         
         results = []
         max_workers = min(max_workers, len(controllers))
@@ -334,14 +392,14 @@ class MultiControllerGuestWiFiCLI:
         print("="*80)
         
         # Summary
-        print(f"\\nSummary:")
+        print(f"\nSummary:")
         print(f"  Total controllers: {len(audit_results)}")
         print(f"  SSH successful: {sum(1 for r in audit_results if r['ssh_success'])}")
         print(f"  Controllers with {self.guest_ssid}: {controllers_with_ssid}")
         print(f"  Unique passwords found: {len(different_passwords)}")
         
         if len(different_passwords) > 1:
-            print(f"\\n⚠️  WARNING: Different passwords found across controllers!")
+            print(f"\n⚠️  WARNING: Different passwords found across controllers!")
             print("  Passwords:", list(different_passwords))
         
         return controllers_with_ssid > 0
@@ -387,7 +445,7 @@ class MultiControllerGuestWiFiCLI:
 
     def update_all_controllers(self, new_password: str, controllers_to_update: list, max_workers: int = 5) -> list:
         """Update password on all specified controllers"""
-        print(f"\\n🔄 Updating {self.guest_ssid} password via CLI on {len(controllers_to_update)} controllers...\\n")
+        print(f"\n🔄 Updating {self.guest_ssid} password via CLI on {len(controllers_to_update)} controllers...\n")
         
         results = []
         max_workers = min(max_workers, len(controllers_to_update))
@@ -419,39 +477,39 @@ class MultiControllerGuestWiFiCLI:
 
     def run_interactive_update(self):
         """Main interactive workflow"""
-        print(f"\\n🖥️  Multi-Controller Guest WiFi Management (CLI Version)")
-        print(f"Using SSH/CLI commands for virtual controllers without API support\\n")
+        print(f"\n🖥️  Multi-Controller Guest WiFi Management (CLI Version)")
+        print(f"Using SSH/CLI commands for virtual controllers without API support\n")
         
         # Step 1: Audit all controllers
         audit_results = self.audit_all_controllers()
         
         if not audit_results:
-            print("\\n❌ No controllers to audit")
+            print("\n❌ No controllers to audit")
             return
         
         # Display results
         has_guest_wifi = self.display_audit_results(audit_results)
         
         if not has_guest_wifi:
-            print(f"\\n❌ No controllers have {self.guest_ssid} configured")
+            print(f"\n❌ No controllers have {self.guest_ssid} configured")
             return
         
         # Step 2: Ask what user wants to do
-        print(f"\\n📋 What would you like to do?")
+        print(f"\n📋 What would you like to do?")
         print("1. Audit only (exit after showing passwords)")
         print("2. Update passwords on all controllers")
         
-        action = input("\\nSelect action (1 or 2): ").strip()
+        action = input("\nSelect action (1 or 2): ").strip()
         
         if action == '1':
-            print("\\n✅ Audit complete. Exiting...")
+            print("\n✅ Audit complete. Exiting...")
             return
         elif action != '2':
-            print("\\n❌ Invalid option. Exiting...")
+            print("\n❌ Invalid option. Exiting...")
             return
         
         # Step 3: Generate or enter new password
-        print("\\n📝 Password Options:")
+        print("\n📝 Password Options:")
         print("1. Generate a new random password")
         print("2. Enter a specific password")
         
@@ -465,27 +523,27 @@ class MultiControllerGuestWiFiCLI:
                 length=password_length,
                 **password_options
             )
-            print(f"\\n🔑 Generated password: {new_password}")
+            print(f"\n🔑 Generated password: {new_password}")
         elif choice == '2':
-            new_password = getpass.getpass("\\nEnter new password: ")
+            new_password = getpass.getpass("\nEnter new password: ")
             confirm_password = getpass.getpass("Confirm new password: ")
             
             if new_password != confirm_password:
-                print("\\n❌ Passwords don't match. Update cancelled")
+                print("\n❌ Passwords don't match. Update cancelled")
                 return
         else:
-            print("\\n❌ Invalid option. Update cancelled")
+            print("\n❌ Invalid option. Update cancelled")
             return
         
         # Step 4: Final confirmation
-        print(f"\\n⚠️  FINAL CONFIRMATION")
+        print(f"\n⚠️  FINAL CONFIRMATION")
         print(f"This will update {self.guest_ssid} password on ALL controllers via SSH/CLI")
         print(f"New password: {new_password}")
         
-        confirm = input("\\nType 'UPDATE' to proceed: ").strip()
+        confirm = input("\nType 'UPDATE' to proceed: ").strip()
         
         if confirm != 'UPDATE':
-            print("\\n❌ Update cancelled")
+            print("\n❌ Update cancelled")
             return
         
         # Step 5: Update controllers
@@ -497,7 +555,7 @@ class MultiControllerGuestWiFiCLI:
         update_results = self.update_all_controllers(new_password, controllers_to_update)
         
         # Step 6: Summary
-        print("\\n" + "="*60)
+        print("\n" + "="*60)
         print("UPDATE SUMMARY")
         print("="*60)
         
@@ -517,14 +575,14 @@ class MultiControllerGuestWiFiCLI:
             password_file = os.path.join(log_dir, f"guest_wifi_password_cli_{timestamp}.txt")
             
             with open(password_file, 'w') as f:
-                f.write(f"Guest WiFi Password Update (CLI) - {timestamp}\\n")
-                f.write(f"SSID: {self.guest_ssid}\\n")
-                f.write(f"New Password: {new_password}\\n")
-                f.write(f"Updated Controllers: {successful}/{len(update_results)}\\n")
+                f.write(f"Guest WiFi Password Update (CLI) - {timestamp}\n")
+                f.write(f"SSID: {self.guest_ssid}\n")
+                f.write(f"New Password: {new_password}\n")
+                f.write(f"Updated Controllers: {successful}/{len(update_results)}\n")
             
-            print(f"\\n📄 Password saved to: {password_file}")
+            print(f"\n📄 Password saved to: {password_file}")
         
-        print("\\n✅ CLI-based process complete!")
+        print("\n✅ CLI-based process complete!")
 
 def main():
     import argparse
@@ -539,8 +597,8 @@ def main():
     
     args = parser.parse_args()
     
-    # Create manager
-    config_file = args.config or "config/cfins_controllers.yaml"
+    # Create manager - if no config specified, GUI will prompt for file selection
+    config_file = args.config or None
     manager = MultiControllerGuestWiFiCLI(config_file=config_file)
     
     if args.audit_only:
