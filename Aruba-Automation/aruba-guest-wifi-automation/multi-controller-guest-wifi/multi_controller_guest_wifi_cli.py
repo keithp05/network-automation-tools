@@ -80,8 +80,8 @@ class ArubaCLIClient:
     def get_current_password(self, ssid_profile: str) -> str:
         """Get current password using show run no-encrypt"""
         try:
-            # Use the specific command you confirmed works
-            command = f"show run no-encrypt | include {ssid_profile}"
+            # Use the exact command format that works with your controllers
+            command = f"show run no-encrypt | include {ssid_profile}|wpa-passphrase"
             output, error = self.execute_command(command)
             
             if error:
@@ -89,18 +89,19 @@ class ArubaCLIClient:
             
             if output and 'wpa-passphrase' in output:
                 # Parse the output to find wpa-passphrase
+                # Expected format: " wpa-passphrase Summer2025"
                 for line in output.split('\n'):
                     line = line.strip()
                     if 'wpa-passphrase' in line:
-                        # Extract password from line like: " wpa-passphrase Summer2025"
+                        # Extract password from line like: "wpa-passphrase Summer2025"
                         parts = line.split()
                         if len(parts) >= 2:
                             password = ' '.join(parts[1:])  # Handle passwords with spaces
                             self.logger.info(f"Found {ssid_profile} password: {password}")
                             return password
             
-            # If primary command didn't work, try fallback
-            fallback_command = f"show run no-encrypt | grep {ssid_profile}"
+            # If primary command didn't work, try simpler version
+            fallback_command = f"show run no-encrypt | include {ssid_profile}"
             output, error = self.execute_command(fallback_command)
             
             if output and 'wpa-passphrase' in output:
