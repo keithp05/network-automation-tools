@@ -44,35 +44,18 @@ class ArubaCLIClient:
         self.logger = logging.getLogger(__name__)
         
     def connect(self) -> bool:
-        """Establish SSH connection with Aruba-specific settings"""
+        """Establish SSH connection"""
         try:
             self.ssh = paramiko.SSHClient()
             self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            
-            # Connect with Aruba-specific settings
             self.ssh.connect(
                 self.controller_ip, 
                 username=self.username, 
                 password=self.password,
-                timeout=15,
-                look_for_keys=False,
-                allow_agent=False,
-                banner_timeout=30
+                timeout=10
             )
-            
-            # Test the connection with a simple command
-            try:
-                test_output, test_error = self.execute_command("show version", timeout=10)
-                if test_output or not test_error:
-                    self.logger.info(f"SSH connected to {self.controller_ip}")
-                    return True
-                else:
-                    self.logger.error(f"SSH connected but commands failing: {test_error}")
-                    return False
-            except:
-                self.logger.error(f"SSH connected but command test failed")
-                return False
-                
+            self.logger.info(f"SSH connected to {self.controller_ip}")
+            return True
         except Exception as e:
             self.logger.error(f"SSH connection failed to {self.controller_ip}: {str(e)}")
             return False
