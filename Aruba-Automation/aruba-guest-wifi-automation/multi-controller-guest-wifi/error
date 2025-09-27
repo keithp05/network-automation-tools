@@ -1,12 +1,178 @@
-PS C:\Users\KPerez1> & C:/Users/KPerez1/AppData/Local/Microsoft/WindowsApps/python3.11.exe "c:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/run_discovery_auto.py"
+PS C:\Users\KPerez1> & C:/Users/KPerez1/AppData/Local/Microsoft/WindowsApps/python3.11.exe "c:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/multi_controller_guest_wifi_cli.py"
+🔍 Config file not found: None
+📁 Opening file picker for YAML configuration...
+✅ Selected: C:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/config/Multi-Controller Guest WiFi Config.yml
+✅ Loaded config: C:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/config/Multi-Controller Guest WiFi Config.yml
 
-🔧 Aruba API Command Discovery (Auto-Config)
-Searching for config file and testing commands...
+🖥️  Multi-Controller Guest WiFi Management (CLI Version)
+Using SSH/CLI commands for virtual controllers without API support
 
-❌ Config file 'cfins_controllers.yaml' not found!
-Searched in:
-  - config/cfins_controllers.yaml
-  - cfins_controllers.yaml
-  - ../config/cfins_controllers.yaml
-  - ../../config/cfins_controllers.yaml
-PS C:\Users\KPerez1> 
+
+🔍 Auditing CF_GUEST via SSH/CLI across 20 controllers...
+
+2025-09-26 21:40:09 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:09 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:09 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH)
+2025-09-26 21:40:09 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:09 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH_7.1)
+2025-09-26 21:40:10 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:10 - __main__ - INFO - SSH connected to 172.19.102.10
+2025-09-26 21:40:10 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 21:40:10 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 21:40:10 - __main__ - WARNING - Command error: Channel closed.
+2025-09-26 21:40:10 - __main__ - WARNING - [CFINS Controller 102.10] CF_GUEST not found
+2025-09-26 21:40:10 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:10 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:10 - __main__ - INFO - SSH connected to 172.19.86.10
+2025-09-26 21:40:10 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:10 - __main__ - INFO - SSH connected to 172.19.133.10
+2025-09-26 21:40:10 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:10 - __main__ - INFO - SSH connected to 172.19.115.10
+2025-09-26 21:40:10 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:10 - __main__ - INFO - SSH connected to 172.19.70.10
+2025-09-26 21:40:10 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 21:40:10 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 21:40:10 - __main__ - WARNING - Command error: Channel closed.
+2025-09-26 21:40:10 - __main__ - WARNING - [CFINS Controller 115.10] CF_GUEST not found
+2025-09-26 21:40:10 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:11 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:11 - __main__ - WARNING - [CFINS Controller 86.10] CF_GUEST not found
+2025-09-26 21:40:11 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:11 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:11 - __main__ - WARNING - [CFINS Controller 70.10] CF_GUEST not found
+2025-09-26 21:40:11 - __main__ - WARNING - [CFINS Controller 133.10] CF_GUEST not found
+2025-09-26 21:40:11 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:11 - __main__ - INFO - SSH connected to 172.19.162.10
+2025-09-26 21:40:11 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:11 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:11 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH)
+2025-09-26 21:40:11 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:11 - __main__ - INFO - SSH connected to 172.19.172.10
+2025-09-26 21:40:11 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:11 - __main__ - WARNING - [CFINS Controller 162.10] CF_GUEST not found
+2025-09-26 21:40:11 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:11 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:11 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:11 - __main__ - WARNING - [CFINS Controller 172.10] CF_GUEST not found
+2025-09-26 21:40:11 - __main__ - INFO - SSH connected to 172.19.101.10
+2025-09-26 21:40:11 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:12 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:12 - __main__ - INFO - SSH connected to 172.19.120.10
+2025-09-26 21:40:12 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:12 - __main__ - INFO - SSH connected to 172.19.74.10
+2025-09-26 21:40:12 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:12 - __main__ - INFO - SSH connected to 172.19.140.10
+2025-09-26 21:40:12 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:12 - __main__ - INFO - SSH connected to 172.19.184.10
+2025-09-26 21:40:12 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:12 - __main__ - WARNING - [CFINS Controller 101.10] CF_GUEST not found
+2025-09-26 21:40:12 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 21:40:12 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 21:40:12 - __main__ - WARNING - Command error: Channel closed.
+2025-09-26 21:40:12 - __main__ - WARNING - [CFINS Controller 74.10] CF_GUEST not found
+2025-09-26 21:40:12 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:12 - __main__ - WARNING - [CFINS Controller 120.10] CF_GUEST not found
+2025-09-26 21:40:12 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH)
+2025-09-26 21:40:12 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:12 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH_7.1)
+2025-09-26 21:40:12 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:12 - __main__ - WARNING - [CFINS Controller 140.10] CF_GUEST not found
+2025-09-26 21:40:12 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:13 - __main__ - WARNING - [CFINS Controller 184.10] CF_GUEST not found
+2025-09-26 21:40:13 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:13 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:13 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:13 - __main__ - INFO - SSH connected to 172.19.100.10
+2025-09-26 21:40:13 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:13 - __main__ - INFO - SSH connected to 172.19.134.10
+2025-09-26 21:40:13 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 21:40:13 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 21:40:13 - __main__ - WARNING - Command error: Channel closed.
+2025-09-26 21:40:13 - __main__ - WARNING - [CFINS Controller 100.10] CF_GUEST not found
+2025-09-26 21:40:13 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:13 - __main__ - INFO - SSH connected to 172.19.108.10
+2025-09-26 21:40:13 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:13 - __main__ - INFO - SSH connected to 172.19.164.10
+2025-09-26 21:40:13 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:13 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:13 - __main__ - INFO - SSH connected to 172.19.72.10
+2025-09-26 21:40:13 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 21:40:13 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:13 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 21:40:13 - __main__ - WARNING - [CFINS Controller 134.10] CF_GUEST not found
+2025-09-26 21:40:13 - __main__ - WARNING - Command error: Channel closed.
+2025-09-26 21:40:13 - __main__ - WARNING - [CFINS Controller 164.10] CF_GUEST not found
+2025-09-26 21:40:13 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 21:40:13 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH)
+2025-09-26 21:40:14 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:14 - __main__ - WARNING - [CFINS Controller 108.10] CF_GUEST not found
+2025-09-26 21:40:14 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:14 - __main__ - INFO - SSH connected to 172.19.117.10
+2025-09-26 21:40:14 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:14 - __main__ - WARNING - [CFINS Controller 72.10] CF_GUEST not found
+2025-09-26 21:40:14 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:14 - __main__ - INFO - SSH connected to 172.19.173.10
+2025-09-26 21:40:14 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 21:40:14 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 21:40:14 - __main__ - WARNING - Command error: Channel closed.
+2025-09-26 21:40:14 - __main__ - WARNING - [CFINS Controller 117.10] CF_GUEST not found
+2025-09-26 21:40:14 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 21:40:14 - __main__ - INFO - SSH connected to 172.19.137.10
+2025-09-26 21:40:15 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:15 - __main__ - WARNING - [CFINS Controller 173.10] CF_GUEST not found
+2025-09-26 21:40:15 - __main__ - WARNING - Command error: Aborted
+2025-09-26 21:40:15 - __main__ - WARNING - [CFINS Controller 137.10] CF_GUEST not found
+================================================================================
+GUEST WIFI AUDIT RESULTS (CLI) - CF_GUEST
+================================================================================
+Controller                     IP                   Current Password     Status
+--------------------------------------------------------------------------------
+CFINS Controller 102.10        172.19.102.10        N/A                  ✗ SSID not configured
+CFINS Controller 115.10        172.19.115.10        N/A                  ✗ SSID not configured
+CFINS Controller 86.10         172.19.86.10         N/A                  ✗ SSID not configured
+CFINS Controller 70.10         172.19.70.10         N/A                  ✗ SSID not configured
+CFINS Controller 133.10        172.19.133.10        N/A                  ✗ SSID not configured
+CFINS Controller 162.10        172.19.162.10        N/A                  ✗ SSID not configured
+CFINS Controller 172.10        172.19.172.10        N/A                  ✗ SSID not configured
+CFINS Controller 101.10        172.19.101.10        N/A                  ✗ SSID not configured
+CFINS Controller 74.10         172.19.74.10         N/A                  ✗ SSID not configured
+CFINS Controller 120.10        172.19.120.10        N/A                  ✗ SSID not configured
+CFINS Controller 140.10        172.19.140.10        N/A                  ✗ SSID not configured
+CFINS Controller 184.10        172.19.184.10        N/A                  ✗ SSID not configured
+CFINS Controller 100.10        172.19.100.10        N/A                  ✗ SSID not configured
+CFINS Controller 134.10        172.19.134.10        N/A                  ✗ SSID not configured
+CFINS Controller 164.10        172.19.164.10        N/A                  ✗ SSID not configured
+CFINS Controller 108.10        172.19.108.10        N/A                  ✗ SSID not configured
+CFINS Controller 72.10         172.19.72.10         N/A                  ✗ SSID not configured
+CFINS Controller 117.10        172.19.117.10        N/A                  ✗ SSID not configured
+CFINS Controller 173.10        172.19.173.10        N/A                  ✗ SSID not configured
+CFINS Controller 137.10        172.19.137.10        N/A                  ✗ SSID not configured
+================================================================================
+
+Summary:
+  Total controllers: 20
+  SSH successful: 20
+  Controllers with CF_GUEST: 0
+  Unique passwords found: 0
+
+❌ No controllers have CF_GUEST configured
+
+------------------------------------------------------------------------------------------------------------------------------
+Configs
+
+wlan ssid-profile CF_GUEST
+ enable
+ index 1
+ type employee
+ essid CF_GUEST
+ wpa-passphrase Summer2025
+ opmode wpa2-psk-aes
+ max-authentication-failures 0
+ vlan 180
+ rf-band all
+ captive-portal disable
+ dtim-period 1
+ broadcast-filter arp
+ dmo-channel-utilization-threshold 90
+ local-probe-req-thresh 0
+ max-clients-threshold 64
