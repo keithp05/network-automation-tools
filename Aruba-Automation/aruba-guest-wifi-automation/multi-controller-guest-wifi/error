@@ -43,3 +43,17 @@ Working with CF_GUEST: 0
 Unique passwords: 0
 ❌ No working controllers found
 PS C:\Users\KPerez1> 
+-------------------------------------------------------------------------------
+24:f2:7f:c6:27:34# sh run | include CF_GUEST
+wlan access-rule CF_GUEST
+wlan ssid-profile CF_GUEST
+ essid CF_GUEST
+24:f2:7f:c6:27:34# sh run | include wp      
+ opmode wpa2-aes
+ wpa-passphrase 2af82c49004ac917795d52fff21ded7942facfe9cab47d4a
+ opmode wpa2-psk-aes
+24:f2:7f:c6:27:34# sh run no-encrypt | include wp
+ opmode wpa2-aes
+ wpa-passphrase Spring2025
+ opmode wpa2-psk-aes
+24:f2:7f:c6:27:34# 
