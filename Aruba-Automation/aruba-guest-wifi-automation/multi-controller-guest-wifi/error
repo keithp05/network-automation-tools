@@ -11,3 +11,122 @@ wlan access-rule CF_GUEST
 wlan ssid-profile CF_GUEST
  essid CF_GUEST
 Centennial_2# 
+-----------------------------------------------------------------------------------
+PS C:\Users\KPerez1> & C:/Users/KPerez1/AppData/Local/Microsoft/WindowsApps/python3.11.exe "c:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/multi_controller_guest_wifi_cli.py"
+🔍 Config file not found: None
+📁 Opening file picker for YAML configuration...
+✅ Selected: C:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/config/Multi-Controller Guest WiFi Config.yml
+✅ Loaded config: C:/Users/KPerez1/OneDrive - United States Fire Insurance Company/Documents/Scripts/Wifi/config/Multi-Controller Guest WiFi Config.yml
+
+🖥️  Multi-Controller Guest WiFi Management (CLI Version)
+Using SSH/CLI commands for virtual controllers without API support
+
+
+🔍 Auditing CF_GUEST via SSH/CLI across 20 controllers...
+
+2025-09-26 22:14:15 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:15 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH)
+2025-09-26 22:14:15 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:15 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:15 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH_7.1)
+2025-09-26 22:14:16 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:16 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 22:14:16 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 22:14:16 - __main__ - ERROR - SSH connected but commands failing: Channel closed.
+2025-09-26 22:14:16 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:16 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:16 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:16 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:16 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 22:14:16 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 22:14:16 - __main__ - ERROR - SSH connected but commands failing: Channel closed.
+2025-09-26 22:14:16 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:16 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:16 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:17 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:17 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH)
+2025-09-26 22:14:17 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:17 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:17 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:17 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:17 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:17 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:17 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:17 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:17 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:18 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:18 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:18 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:18 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:18 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:18 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 22:14:18 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 22:14:18 - __main__ - ERROR - SSH connected but commands failing: Channel closed.
+2025-09-26 22:14:18 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH)
+2025-09-26 22:14:18 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:18 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:18 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:18 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:18 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:18 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:18 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH_7.1)
+2025-09-26 22:14:19 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:19 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:19 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 22:14:19 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 22:14:19 - __main__ - ERROR - SSH connected but commands failing: Channel closed.
+2025-09-26 22:14:19 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:19 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:19 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:19 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:19 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:19 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 22:14:19 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 22:14:19 - __main__ - ERROR - SSH connected but commands failing: Channel closed.
+2025-09-26 22:14:20 - paramiko.transport - INFO - Connected (version 2.0, client dropbear)
+2025-09-26 22:14:20 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:20 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:20 - paramiko.transport - INFO - Connected (version 2.0, client OpenSSH)
+2025-09-26 22:14:20 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:20 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:20 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:20 - paramiko.transport - INFO - Authentication (password) successful!
+2025-09-26 22:14:20 - paramiko.transport - INFO - Disconnect (code 2): Only cli connections are allowed to the AP
+2025-09-26 22:14:20 - __main__ - ERROR - Command execution failed: Channel closed.
+2025-09-26 22:14:20 - __main__ - ERROR - SSH connected but commands failing: Channel closed.
+2025-09-26 22:14:21 - __main__ - ERROR - SSH connected but commands failing: Aborted
+2025-09-26 22:14:21 - __main__ - ERROR - SSH connected but commands failing: Aborted
+================================================================================
+GUEST WIFI AUDIT RESULTS (CLI) - CF_GUEST
+================================================================================
+Controller                     IP                   Current Password     Status
+--------------------------------------------------------------------------------
+CFINS Controller 102.10        172.19.102.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 115.10        172.19.115.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 86.10         172.19.86.10         SSH FAIL             ✗ Connection failed
+CFINS Controller 133.10        172.19.133.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 70.10         172.19.70.10         SSH FAIL             ✗ Connection failed
+CFINS Controller 162.10        172.19.162.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 172.10        172.19.172.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 74.10         172.19.74.10         SSH FAIL             ✗ Connection failed
+CFINS Controller 101.10        172.19.101.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 140.10        172.19.140.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 120.10        172.19.120.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 184.10        172.19.184.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 100.10        172.19.100.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 164.10        172.19.164.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 134.10        172.19.134.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 108.10        172.19.108.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 72.10         172.19.72.10         SSH FAIL             ✗ Connection failed
+CFINS Controller 117.10        172.19.117.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 137.10        172.19.137.10        SSH FAIL             ✗ Connection failed
+CFINS Controller 173.10        172.19.173.10        SSH FAIL             ✗ Connection failed
+================================================================================
+
+Summary:
+  Total controllers: 20
+  SSH successful: 0
+  Controllers with CF_GUEST: 0
+  Unique passwords found: 0
+
+❌ No controllers have CF_GUEST configured
