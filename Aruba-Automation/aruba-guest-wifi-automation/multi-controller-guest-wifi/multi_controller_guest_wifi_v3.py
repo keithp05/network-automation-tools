@@ -93,14 +93,11 @@ class ArubaController:
             return False
     
     def execute_command(self, command):
-        """Execute command via shell (since exec_command is blocked)"""
+        """Execute command via shell using v4 working approach"""
         try:
-            # Debug: show exactly what command is being sent
-            print(f"🔧 DEBUG: Executing command: '{command}'")
-            
             # Use invoke_shell since exec_command is blocked
             shell = self.ssh.invoke_shell()
-            time.sleep(2)  # Wait for shell to be ready
+            time.sleep(3)  # Wait for shell to be ready
             
             # Clear any initial output
             if shell.recv_ready():
@@ -108,26 +105,26 @@ class ArubaController:
             
             # Send command
             shell.send(command + "\n")
-            time.sleep(4)  # Give command more time to execute
             
-            # Collect output - keep reading until we get prompt back
+            # Wait for command to complete (v4 timing)
+            time.sleep(4)  # Wait 4 seconds for command to complete
+            
+            # Collect output (v4 approach)
             output = ""
             attempts = 0
-            while attempts < 20:  # Try for up to 10 seconds
+            while attempts < 20:  # Try for 10 seconds total
                 if shell.recv_ready():
                     chunk = shell.recv(65535).decode('utf-8', errors='ignore')
                     output += chunk
-                    # Check if we got a prompt back (indicating command is done)
-                    if '#' in chunk and ('show ' not in chunk or chunk.strip().endswith('#')):
-                        break
-                time.sleep(0.5)
-                attempts += 1
+                else:
+                    time.sleep(0.5)
+                    attempts += 1
+                    # If no data for a while, try sending enter to get prompt
+                    if attempts % 8 == 0:
+                        shell.send("\n")
+                        time.sleep(1)
             
             shell.close()
-            
-            # Debug: show raw output
-            print(f"🔧 DEBUG: Raw output: {repr(output[:200])}")
-            
             return output, None
             
         except Exception as e:
@@ -212,45 +209,23 @@ def audit_controller(controller_info):
         
         # Check CF_GUEST config first
         cf_guest_output, cf_error = ctrl.get_cf_guest_config()
-        print(f"🔧 DEBUG {ctrl.name}: CF_GUEST check output: {repr(cf_guest_output[:100] if cf_guest_output else None)}")
         
         if cf_guest_output and "CF_GUEST" in cf_guest_output:
             result['cf_guest_exists'] = True
-            print(f"✅ {ctrl.name}: CF_GUEST found, checking password...")
             
             # Get password
             pwd_output, pwd_error = ctrl.get_passwords()
-            print(f"🔧 DEBUG {ctrl.name}: Password check output: {repr(pwd_output[:100] if pwd_output else None)}")
             
             if pwd_output and "wpa-passphrase" in pwd_output:
-                # Extract password from line like: " wpa-passphrase Spring2025"
-                # Skip command echoes and only look for actual config lines
+                # Extract password using v4 working approach
                 for line in pwd_output.split('\n'):
-                    line = line.strip()
-                    # Skip command echoes, prompts, and empty lines
-                    if (line.startswith('show ') or 
-                        line.startswith('sh ') or 
-                        line.endswith('#') or 
-                        'show tech-support' in line or
-                        not line):
-                        continue
-                    
-                    if 'wpa-passphrase' in line:
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            # Make sure this isn't the command itself
-                            password = ' '.join(parts[1:])
-                            if password != 'wpa-passphrase' and not password.startswith('show'):
-                                result['current_password'] = password
-                                print(f"✅ {ctrl.name}: Found password: {result['current_password']}")
-                                break
-                if not result['current_password']:
-                    print(f"❌ {ctrl.name}: CF_GUEST found but no password extracted")
-            else:
-                print(f"❌ {ctrl.name}: No wpa-passphrase found in output")
+                    if 'wpa-passphrase' in line and not line.strip().startswith('show'):
+                        password = line.strip().split()
+                        if len(password) >= 2:
+                            result['current_password'] = ' '.join(password[1:])
+                            break
         else:
             result['error'] = "CF_GUEST not configured"
-            print(f"❌ {ctrl.name}: CF_GUEST not found in output")
             
     except Exception as e:
         result['error'] = str(e)
