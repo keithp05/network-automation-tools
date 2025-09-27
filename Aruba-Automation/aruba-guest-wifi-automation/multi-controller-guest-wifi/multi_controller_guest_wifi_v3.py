@@ -108,14 +108,20 @@ class ArubaController:
             
             # Send command
             shell.send(command + "\n")
-            time.sleep(3)  # Give command time to execute
+            time.sleep(4)  # Give command more time to execute
             
-            # Collect output
+            # Collect output - keep reading until we get prompt back
             output = ""
-            while shell.recv_ready():
-                chunk = shell.recv(65535).decode('utf-8', errors='ignore')
-                output += chunk
-                time.sleep(0.1)
+            attempts = 0
+            while attempts < 20:  # Try for up to 10 seconds
+                if shell.recv_ready():
+                    chunk = shell.recv(65535).decode('utf-8', errors='ignore')
+                    output += chunk
+                    # Check if we got a prompt back (indicating command is done)
+                    if '#' in chunk and ('show ' not in chunk or chunk.strip().endswith('#')):
+                        break
+                time.sleep(0.5)
+                attempts += 1
             
             shell.close()
             
@@ -218,13 +224,26 @@ def audit_controller(controller_info):
             
             if pwd_output and "wpa-passphrase" in pwd_output:
                 # Extract password from line like: " wpa-passphrase Spring2025"
+                # Skip command echoes and only look for actual config lines
                 for line in pwd_output.split('\n'):
+                    line = line.strip()
+                    # Skip command echoes, prompts, and empty lines
+                    if (line.startswith('show ') or 
+                        line.startswith('sh ') or 
+                        line.endswith('#') or 
+                        'show tech-support' in line or
+                        not line):
+                        continue
+                    
                     if 'wpa-passphrase' in line:
-                        parts = line.strip().split()
+                        parts = line.split()
                         if len(parts) >= 2:
-                            result['current_password'] = ' '.join(parts[1:])
-                            print(f"✅ {ctrl.name}: Found password: {result['current_password']}")
-                            break
+                            # Make sure this isn't the command itself
+                            password = ' '.join(parts[1:])
+                            if password != 'wpa-passphrase' and not password.startswith('show'):
+                                result['current_password'] = password
+                                print(f"✅ {ctrl.name}: Found password: {result['current_password']}")
+                                break
                 if not result['current_password']:
                     print(f"❌ {ctrl.name}: CF_GUEST found but no password extracted")
             else:
