@@ -157,9 +157,10 @@ class ArubaController:
                 "configure terminal",
                 "wlan ssid-profile CF_GUEST", 
                 f"wpa-passphrase {new_password}",
-                "exit",
-                "commit apply",
-                "write memory"  # Save configuration
+                "exit",  # Exit from wlan ssid-profile
+                "exit",  # Exit from configure terminal
+                "write memory",  # Save configuration first
+                "commit apply"  # Then apply the changes
             ]
             
             # Send all commands through same shell with status updates
