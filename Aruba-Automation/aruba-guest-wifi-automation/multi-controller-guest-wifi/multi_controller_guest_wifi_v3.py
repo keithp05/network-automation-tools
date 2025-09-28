@@ -141,11 +141,13 @@ class ArubaController:
         return output, error
     
     def update_password(self, new_password):
-        """Update CF_GUEST password using shell session"""
+        """Update CF_GUEST password using shell session with detailed logging"""
         try:
+            print(f"🔧 {self.name}: Starting password update to '{new_password}'")
+            
             # Use one shell session for all commands
             shell = self.ssh.invoke_shell()
-            time.sleep(2)
+            time.sleep(3)  # Wait for shell to be ready
             
             # Clear initial output
             if shell.recv_ready():
@@ -153,28 +155,44 @@ class ArubaController:
             
             commands = [
                 "configure terminal",
-                "wlan ssid-profile CF_GUEST",
+                "wlan ssid-profile CF_GUEST", 
                 f"wpa-passphrase {new_password}",
                 "exit",
-                "commit apply"
+                "commit apply",
+                "write memory"  # Save configuration
             ]
             
-            # Send all commands through same shell
-            for cmd in commands:
+            # Send all commands through same shell with status updates
+            for i, cmd in enumerate(commands, 1):
+                print(f"   📝 {self.name}: Step {i}/{len(commands)}: {cmd}")
                 shell.send(cmd + "\n")
-                time.sleep(2)  # Wait between commands
+                time.sleep(3)  # Wait between commands
                 
-                # Check for errors
-                if shell.recv_ready():
-                    output = shell.recv(65535).decode('utf-8', errors='ignore')
-                    if "error" in output.lower() or "invalid" in output.lower():
-                        shell.close()
-                        return False, f"Command '{cmd}' failed: {output}"
+                # Collect and check output
+                output = ""
+                attempts = 0
+                while attempts < 10:  # Wait up to 5 seconds for response
+                    if shell.recv_ready():
+                        chunk = shell.recv(65535).decode('utf-8', errors='ignore')
+                        output += chunk
+                    time.sleep(0.5)
+                    attempts += 1
+                
+                # Check for errors in output
+                if output and ("error" in output.lower() or "invalid" in output.lower() or "failed" in output.lower()):
+                    print(f"   ❌ {self.name}: Command failed: {cmd}")
+                    print(f"      Output: {output.strip()}")
+                    shell.close()
+                    return False, f"Command '{cmd}' failed: {output}"
+                else:
+                    print(f"   ✅ {self.name}: Step {i} completed")
             
             shell.close()
+            print(f"🎉 {self.name}: Password update completed successfully!")
             return True, "Password updated successfully"
             
         except Exception as e:
+            print(f"❌ {self.name}: Error during update: {str(e)}")
             return False, f"Shell error: {str(e)}"
     
     def disconnect(self):
@@ -336,12 +354,17 @@ def main():
         return
     
     # Get new password
-    new_password = getpass.getpass("\n🔑 Enter new password: ")
-    confirm = getpass.getpass("Confirm password: ")
+    print("\n🔑 Password Entry:")
+    new_password = input("Enter new password (will be visible): ")
+    confirm = input("Confirm password: ")
     
     if new_password != confirm:
         print("❌ Passwords don't match")
         return
+    
+    # Show what will be applied
+    print(f"\n📋 Password to be applied: '{new_password}'")
+    print(f"🎯 Target controllers: {len(working_controllers)}")
     
     # Final confirmation
     print(f"\n⚠️  Update CF_GUEST password on {len(working_controllers)} controllers?")
@@ -364,13 +387,13 @@ def main():
             result = future.result()
             update_results.append(result)
             
-            # Show progress
+            # Final status for each controller (detailed progress shown in update_password method)
             name = result['name']
             if result['success']:
-                print(f"✅ {name}: Updated")
+                print(f"\n🎯 {name}: ✅ COMPLETE")
             else:
                 error = result['error'] or "Unknown error"
-                print(f"❌ {name}: {error}")
+                print(f"\n🎯 {name}: ❌ FAILED - {error}")
     
     # Final summary
     successful = len([r for r in update_results if r['success']])
