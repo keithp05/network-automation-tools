@@ -258,6 +258,8 @@ def main():
     devices_needing_config = 0
     devices_with_psn05 = 0
     devices_fully_migrated = 0
+    ios_devices = 0
+    nxos_devices = 0
     
     # Connect to Devices and Audit
     for device_ip in device_list:
@@ -268,7 +270,14 @@ def main():
             # Detect device type first
             print(f"  Detecting device type...")
             device_type = detect_device_type(device_ip, username, password)
-            print(f"  Device type: {device_type}")
+
+            # Display device type clearly
+            if device_type == 'cisco_nxos':
+                print(f"  ✓ Device Type: Cisco Nexus (NX-OS)")
+                nxos_devices += 1
+            else:
+                print(f"  ✓ Device Type: Cisco IOS/IOS-XE")
+                ios_devices += 1
 
             device = {
                 'device_type': device_type,
@@ -369,6 +378,9 @@ def main():
     print(f"Total devices audited: {total_devices}")
     print(f"Successful connections: {successful_connections}")
     print(f"Failed connections: {failed_connections}")
+    print(f"\nDevice Types:")
+    print(f"Cisco IOS/IOS-XE devices: {ios_devices}")
+    print(f"Cisco Nexus (NX-OS) devices: {nxos_devices}")
     print(f"\nPSN Status:")
     print(f"Devices with PSN05 present: {devices_with_psn05}")
     print(f"Devices needing PSN06 config: {devices_needing_config}")
