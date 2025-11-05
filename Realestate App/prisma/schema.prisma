@@ -1,0 +1,962 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  role          UserRole  @default(INVESTOR)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  properties    Property[]
+  tenants       Tenant[]
+  maintenanceRequests MaintenanceRequest[]
+  leases        Lease[]
+  accountingIntegrations AccountingIntegration[]
+  vendors       Vendor[]
+}
+
+enum UserRole {
+  INVESTOR
+  TENANT
+  ADMIN
+}
+
+model Property {
+  id                String      @id @default(cuid())
+  address           String
+  city              String
+  state             String
+  zipCode           String
+  latitude          Float?
+  longitude         Float?
+
+  // Property Details
+  propertyType      PropertyType
+  bedrooms          Int
+  bathrooms         Float
+  squareFeet        Int?
+  lotSize           Float?
+  yearBuilt         Int?
+
+  // Financial
+  purchasePrice     Float?
+  currentValue      Float?
+  monthlyRent       Float?
+  estimatedRent     Float?
+
+  // Status
+  status            PropertyStatus @default(SEARCHING)
+
+  // Source
+  source            String?       // zillow, realtor, facebook
+  externalId        String?       // ID from external source
+  sourceUrl         String?
+
+  // Media
+  images            String?       // JSON string of image URLs
+
+  // Analytics
+  cmaData           Json?         // Comparative Market Analysis
+  crimeData         Json?         // Crime statistics
+  demographics      Json?         // Area demographics
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  owner             User          @relation(fields: [ownerId], references: [id])
+  ownerId           String
+
+  leases            Lease[]
+  maintenanceRequests MaintenanceRequest[]
+  bills             Bill[]
+  payments          Payment[]
+  inspections       PropertyInspection[]
+  notifications     Notification[]
+  vendors           VendorProperty[]
+
+  @@index([city, state])
+  @@index([status])
+  @@index([ownerId])
+}
+
+enum PropertyType {
+  SINGLE_FAMILY
+  MULTI_FAMILY
+  CONDO
+  TOWNHOUSE
+  APARTMENT
+  COMMERCIAL
+}
+
+enum PropertyStatus {
+  SEARCHING
+  ANALYZING
+  UNDER_CONTRACT
+  OWNED
+  RENTED
+  FOR_SALE
+}
+
+model Tenant {
+  id                String      @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String      @unique
+  phone             String?
+
+  // Screening
+  creditScore       Int?
+  annualIncome      Float?
+  employmentStatus  String?
+  backgroundCheck   Json?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  landlord          User        @relation(fields: [landlordId], references: [id])
+  landlordId        String
+
+  leases            Lease[]
+  maintenanceRequests MaintenanceRequest[]
+  bills             Bill[]
+  payments          Payment[]
+  inspections       PropertyInspection[]
+
+  @@index([landlordId])
+}
+
+model Lease {
+  id                String      @id @default(cuid())
+
+  startDate         DateTime
+  endDate           DateTime
+  monthlyRent       Float
+  securityDeposit   Float
+
+  status            LeaseStatus @default(ACTIVE)
+  documentUrl       String?     // Generated lease PDF
+
+  // Auto-pay settings
+  autoPayEnabled    Boolean     @default(false)
+  autoPayMethod     PaymentMethod?
+  autoPayDay        Int?        // Day of month (1-31)
+
+  // Reminder settings
+  rentReminderDays  Int         @default(3) // Days before due date
+  reminderEnabled   Boolean     @default(true)
+
+  // Renewal tracking
+  renewalOffered    Boolean     @default(false)
+  renewalOfferDate  DateTime?
+  renewalTermMonths Int?        // 12, 24, or 36
+  renewalRent       Float?
+  renewalResponse   RenewalResponse?
+  renewalResponseDate DateTime?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  property          Property    @relation(fields: [propertyId], references: [id])
+  propertyId        String
+
+  tenant            Tenant      @relation(fields: [tenantId], references: [id])
+  tenantId          String
+
+  landlord          User        @relation(fields: [landlordId], references: [id])
+  landlordId        String
+
+  bills             Bill[]
+  payments          Payment[]
+  inspections       PropertyInspection[]
+  notifications     Notification[]
+  leaseLineItems    LeaseLineItem[]
+
+  @@index([propertyId])
+  @@index([tenantId])
+  @@index([landlordId])
+  @@index([endDate]) // For lease expiration queries
+}
+
+model LeaseLineItem {
+  id                String      @id @default(cuid())
+
+  // Item details
+  itemType          BillType
+  itemName          String      // "Monthly Rent", "Water & Sewer", "HOA Fee", etc.
+  description       String?
+  amount            Float
+
+  // Billing schedule
+  isRecurring       Boolean     @default(false)
+  frequency         BillFrequency?
+  dueDay            Int?        // Day of month (1-31)
+
+  // Vendor information (if applicable)
+  vendorName        String?     // "City Water Department", "HOA Management", etc.
+  vendorAccountNumber String?   // Account # for utility/HOA bills
+  vendorContact     String?     // Phone or email
+
+  // Who pays (tenant vs landlord)
+  paidBy            PaidBy      @default(TENANT)
+
+  // Notes
+  notes             String?
+
+  // Order in lease document
+  displayOrder      Int         @default(0)
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  lease             Lease       @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  leaseId           String
+
+  bills             Bill[]
+
+  @@index([leaseId])
+  @@index([itemType])
+}
+
+enum PaidBy {
+  TENANT
+  LANDLORD
+  SHARED
+}
+
+enum RenewalResponse {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTER_OFFER
+}
+
+model Bill {
+  id                String      @id @default(cuid())
+
+  // Bill Details
+  name              String      // "Rent", "Water", "Electricity", "HOA", "Lawn Care", etc.
+  description       String?
+  amount            Float
+
+  // Billing Schedule
+  billType          BillType    @default(CUSTOM)
+  isRecurring       Boolean     @default(false)
+  frequency         BillFrequency? // MONTHLY, QUARTERLY, ANNUALLY, etc.
+  dueDay            Int?        // Day of month (1-31) for recurring bills
+
+  // Due Date
+  dueDate           DateTime
+
+  // Status
+  status            BillStatus  @default(PENDING)
+  paidDate          DateTime?
+  paidAmount        Float?
+
+  // Late Fees
+  lateFeeEnabled    Boolean     @default(false)
+  lateFeeAmount     Float?
+  lateFeeAppliedDate DateTime?
+
+  // Notes
+  notes             String?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  lease             Lease       @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  leaseId           String
+
+  tenant            Tenant      @relation(fields: [tenantId], references: [id])
+  tenantId          String
+
+  property          Property    @relation(fields: [propertyId], references: [id])
+  propertyId        String
+
+  vendor            Vendor?     @relation(fields: [vendorId], references: [id])
+  vendorId          String?
+
+  leaseLineItem     LeaseLineItem? @relation(fields: [leaseLineItemId], references: [id])
+  leaseLineItemId   String?
+
+  payments          Payment[]
+  notifications     Notification[]
+
+  @@index([leaseId])
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([vendorId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+enum BillType {
+  RENT
+  WATER
+  ELECTRICITY
+  GAS
+  INTERNET
+  CABLE
+  TRASH
+  SEWER
+  HOA
+  LAWN_CARE
+  PEST_CONTROL
+  PARKING
+  PET_RENT
+  STORAGE
+  LATE_FEE
+  CUSTOM
+}
+
+enum BillFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUALLY
+  ANNUALLY
+  ONE_TIME
+}
+
+enum BillStatus {
+  PENDING
+  PAID
+  PARTIAL
+  OVERDUE
+  WAIVED
+  CANCELLED
+}
+
+model Vendor {
+  id                String      @id @default(cuid())
+
+  // Vendor details
+  vendorName        String
+  vendorType        VendorType
+  description       String?
+
+  // Contact information
+  contactName       String?
+  email             String?
+  phone             String?
+  website           String?
+
+  // Address
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+
+  // Account information
+  accountNumber     String?     // Property's account # with this vendor
+  customerNumber    String?     // Alternative ID
+
+  // Payment details
+  paymentTerms      String?     // "Net 30", "Due on receipt", etc.
+  preferredPaymentMethod String? // "ACH", "Check", "Online portal"
+
+  // Tax information
+  taxId             String?     // EIN or SSN (encrypted)
+  is1099            Boolean     @default(false)
+
+  // Status
+  isActive          Boolean     @default(true)
+
+  // Notes
+  notes             String?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  landlord          User        @relation(fields: [landlordId], references: [id])
+  landlordId        String
+
+  bills             Bill[]
+  properties        VendorProperty[]
+
+  @@index([landlordId])
+  @@index([vendorType])
+  @@index([isActive])
+}
+
+enum VendorType {
+  UTILITY_WATER
+  UTILITY_ELECTRIC
+  UTILITY_GAS
+  UTILITY_INTERNET
+  UTILITY_TRASH
+  HOA
+  PROPERTY_MANAGEMENT
+  LAWN_CARE
+  PEST_CONTROL
+  PLUMBER
+  ELECTRICIAN
+  HVAC
+  HANDYMAN
+  CLEANING_SERVICE
+  SNOW_REMOVAL
+  POOL_SERVICE
+  INSURANCE
+  MORTGAGE_LENDER
+  TAX_AUTHORITY
+  OTHER
+}
+
+model VendorProperty {
+  id                String      @id @default(cuid())
+
+  // Property-specific vendor info
+  accountNumber     String?     // Account # for this specific property
+  serviceAddress    String?     // May differ from property address
+
+  // Service details
+  serviceStartDate  DateTime?
+  serviceEndDate    DateTime?
+  isActive          Boolean     @default(true)
+
+  notes             String?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  vendor            Vendor      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  vendorId          String
+
+  property          Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId        String
+
+  @@unique([vendorId, propertyId])
+  @@index([vendorId])
+  @@index([propertyId])
+  @@index([isActive])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+
+  amount            Float
+  paymentDate       DateTime      @default(now())
+  paymentMethod     PaymentMethod @default(OTHER)
+
+  // Payment Details
+  confirmationNumber String?
+  notes             String?
+
+  // Associated Bill (optional - can be a general payment)
+  bill              Bill?         @relation(fields: [billId], references: [id])
+  billId            String?
+
+  lease             Lease         @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  leaseId           String
+
+  tenant            Tenant        @relation(fields: [tenantId], references: [id])
+  tenantId          String
+
+  property          Property      @relation(fields: [propertyId], references: [id])
+  propertyId        String
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([leaseId])
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([billId])
+  @@index([paymentDate])
+}
+
+enum PaymentMethod {
+  CASH
+  CHECK
+  BANK_TRANSFER
+  CREDIT_CARD
+  DEBIT_CARD
+  VENMO
+  ZELLE
+  PAYPAL
+  CASHAPP
+  OTHER
+}
+
+enum LeaseStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+model MaintenanceRequest {
+  id                String              @id @default(cuid())
+  title             String
+  description       String
+  priority          Priority            @default(MEDIUM)
+  status            MaintenanceStatus   @default(OPEN)
+
+  images            String?             // JSON string of image URLs
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  completedAt       DateTime?
+
+  property          Property            @relation(fields: [propertyId], references: [id])
+  propertyId        String
+
+  tenant            Tenant?             @relation(fields: [tenantId], references: [id])
+  tenantId          String?
+
+  assignedTo        User                @relation(fields: [assignedToId], references: [id])
+  assignedToId      String
+
+  @@index([propertyId])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model CMAReport {
+  id                String      @id @default(cuid())
+  propertyAddress   String
+
+  // Comparable properties
+  comparables       Json
+
+  // AI Analysis
+  estimatedValue    Float
+  confidence        Float
+  marketTrends      Json
+  recommendations   String
+
+  createdAt         DateTime    @default(now())
+
+  @@index([propertyAddress])
+}
+
+model CrimeReport {
+  id                String      @id @default(cuid())
+  address           String
+  latitude          Float
+  longitude         Float
+
+  // Crime statistics
+  crimeScore        Float
+  incidents         Json
+  trends            Json
+
+  createdAt         DateTime    @default(now())
+
+  @@index([latitude, longitude])
+}
+
+model PropertyInspection {
+  id                String              @id @default(cuid())
+
+  // Inspection details
+  inspectionType    InspectionType
+  inspectionDate    DateTime            @default(now())
+  inspectorName     String?
+  notes             String?
+
+  // LiDAR floor plan
+  floorPlanUrl      String?             // 3D model file URL
+  floorPlanData     Json?               // LiDAR scan data
+
+  // Overall condition
+  overallCondition  String?             // Excellent, Good, Fair, Poor
+  totalDamageAmount Float               @default(0)
+  wearAndTearAmount Float               @default(0)
+
+  // Security deposit calculation
+  depositHeld       Float?
+  depositReturned   Float?
+  deductionsAmount  Float?
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  property          Property            @relation(fields: [propertyId], references: [id])
+  propertyId        String
+
+  lease             Lease?              @relation(fields: [leaseId], references: [id])
+  leaseId           String?
+
+  tenant            Tenant?             @relation(fields: [tenantId], references: [id])
+  tenantId          String?
+
+  photos            InspectionPhoto[]
+  damageAssessments DamageAssessment[]
+
+  @@index([propertyId])
+  @@index([leaseId])
+  @@index([inspectionType])
+  @@index([inspectionDate])
+}
+
+enum InspectionType {
+  MOVE_IN
+  MOVE_OUT
+  ROUTINE
+  MAINTENANCE
+  EMERGENCY
+}
+
+model InspectionPhoto {
+  id                String              @id @default(cuid())
+
+  // Photo details
+  photoUrl          String
+  thumbnailUrl      String?
+  description       String?
+
+  // Location on floor plan
+  roomName          String?             // "Living Room", "Bedroom 1", etc.
+  floorPlanX        Float?              // X coordinate on floor plan
+  floorPlanY        Float?              // Y coordinate on floor plan
+  floorLevel        Int                 @default(0) // 0 = ground, 1 = first, etc.
+
+  // AI Analysis
+  aiAnalyzed        Boolean             @default(false)
+  aiDetectedIssues  Json?               // Array of detected issues
+  aiConfidence      Float?              // 0-1 confidence score
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  inspection        PropertyInspection  @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  inspectionId      String
+
+  damageAssessment  DamageAssessment?
+
+  @@index([inspectionId])
+}
+
+model DamageAssessment {
+  id                String              @id @default(cuid())
+
+  // Damage details
+  damageType        DamageType
+  severity          DamageSeverity
+  description       String
+
+  // Classification
+  isWearAndTear     Boolean             @default(false)
+  requiresRepair    Boolean             @default(true)
+
+  // Cost estimation
+  estimatedCost     Float
+  actualCost        Float?
+
+  // AI assessment
+  aiGenerated       Boolean             @default(false)
+  aiConfidence      Float?
+  aiReasoning       String?             // Why AI classified as damage vs wear
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  inspection        PropertyInspection  @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  inspectionId      String
+
+  photo             InspectionPhoto?    @relation(fields: [photoId], references: [id])
+  photoId           String?             @unique
+
+  @@index([inspectionId])
+  @@index([damageType])
+  @@index([isWearAndTear])
+}
+
+enum DamageType {
+  WALL_DAMAGE
+  FLOOR_DAMAGE
+  CEILING_DAMAGE
+  WINDOW_DAMAGE
+  DOOR_DAMAGE
+  APPLIANCE_DAMAGE
+  PLUMBING_ISSUE
+  ELECTRICAL_ISSUE
+  CARPET_STAIN
+  PAINT_DAMAGE
+  FIXTURE_DAMAGE
+  CABINET_DAMAGE
+  COUNTERTOP_DAMAGE
+  TILE_DAMAGE
+  MOLD_MILDEW
+  PET_DAMAGE
+  SMOKE_DAMAGE
+  OTHER
+}
+
+enum DamageSeverity {
+  MINOR
+  MODERATE
+  SEVERE
+  CRITICAL
+}
+
+model Notification {
+  id                String              @id @default(cuid())
+
+  // Notification details
+  type              NotificationType
+  title             String
+  message           String
+
+  // Recipient
+  recipientType     RecipientType       // LANDLORD or TENANT
+  recipientId       String              // User or Tenant ID
+
+  // Status
+  status            NotificationStatus  @default(PENDING)
+  sentAt            DateTime?
+  readAt            DateTime?
+  actionTaken       Boolean             @default(false)
+  actionTakenAt     DateTime?
+
+  // Calendar invite
+  calendarInvite    Boolean             @default(false)
+  eventDate         DateTime?
+  eventTitle        String?
+
+  // Related entities
+  property          Property?           @relation(fields: [propertyId], references: [id])
+  propertyId        String?
+
+  lease             Lease?              @relation(fields: [leaseId], references: [id])
+  leaseId           String?
+
+  bill              Bill?               @relation(fields: [billId], references: [id])
+  billId            String?
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([recipientId])
+  @@index([status])
+  @@index([type])
+  @@index([sentAt])
+}
+
+enum NotificationType {
+  RENT_DUE_REMINDER
+  RENT_OVERDUE
+  PAYMENT_RECEIVED
+  LEASE_EXPIRING_SOON
+  LEASE_RENEWAL_OFFER
+  LEASE_RENEWAL_RESPONSE
+  MAINTENANCE_REQUEST
+  INSPECTION_SCHEDULED
+  AUTO_PAY_FAILED
+  LATE_FEE_APPLIED
+  GENERAL
+}
+
+enum RecipientType {
+  LANDLORD
+  TENANT
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model AccountingIntegration {
+  id                String                @id @default(cuid())
+
+  // Integration details
+  platform          AccountingPlatform
+  status            IntegrationStatus     @default(DISCONNECTED)
+
+  // OAuth credentials (encrypted)
+  accessToken       String?
+  refreshToken      String?
+  tokenExpiry       DateTime?
+
+  // Platform-specific IDs
+  companyId         String?               // QuickBooks Company ID
+  realmId           String?               // QuickBooks Realm ID
+  organizationId    String?               // Xero Organization ID
+  businessId        String?               // Wave Business ID
+
+  // Settings
+  autoSync          Boolean               @default(true)
+  syncFrequency     SyncFrequency         @default(DAILY)
+  lastSyncAt        DateTime?
+  nextSyncAt        DateTime?
+
+  // Sync configuration
+  syncIncome        Boolean               @default(true)  // Rent payments
+  syncExpenses      Boolean               @default(true)  // Bills, maintenance
+  syncBills         Boolean               @default(true)  // Vendor bills
+  syncInvoices      Boolean               @default(true)  // Tenant invoices
+
+  // Error tracking
+  lastError         String?
+  errorCount        Int                   @default(0)
+
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  user              User                  @relation(fields: [userId], references: [id])
+  userId            String
+
+  syncLogs          AccountingSyncLog[]
+  transactions      AccountingTransaction[]
+
+  @@index([userId])
+  @@index([platform])
+  @@index([status])
+}
+
+enum AccountingPlatform {
+  QUICKBOOKS_ONLINE
+  QUICKBOOKS_DESKTOP
+  XERO
+  WAVE
+  FRESHBOOKS
+  ZOHO_BOOKS
+  SAGE
+  NETSUITE
+  BENCH
+  MANUAL_EXPORT
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  PENDING_AUTH
+  EXPIRED
+}
+
+enum SyncFrequency {
+  REAL_TIME
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+  MANUAL
+}
+
+model AccountingSyncLog {
+  id                String                @id @default(cuid())
+
+  syncType          SyncType
+  status            SyncStatus            @default(PENDING)
+
+  // Sync details
+  recordsProcessed  Int                   @default(0)
+  recordsSucceeded  Int                   @default(0)
+  recordsFailed     Int                   @default(0)
+
+  // Timing
+  startedAt         DateTime              @default(now())
+  completedAt       DateTime?
+  duration          Int?                  // Milliseconds
+
+  // Results
+  errorMessage      String?
+  errorDetails      Json?
+  successDetails    Json?
+
+  integration       AccountingIntegration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  integrationId     String
+
+  @@index([integrationId])
+  @@index([syncType])
+  @@index([status])
+  @@index([startedAt])
+}
+
+enum SyncType {
+  INCOME            // Rent payments
+  EXPENSES          // Operating expenses
+  BILLS             // Vendor bills
+  INVOICES          // Tenant invoices
+  ACCOUNTS          // Chart of accounts
+  CONTACTS          // Tenants/vendors
+  PROPERTIES        // Properties as assets
+  FULL_SYNC         // Complete sync
+}
+
+enum SyncStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  PARTIAL
+}
+
+model AccountingTransaction {
+  id                String                @id @default(cuid())
+
+  // Transaction details
+  transactionType   TransactionType
+  category          String                // "Rent Income", "Utilities", etc.
+  description       String
+  amount            Float
+  transactionDate   DateTime
+
+  // Platform-specific IDs
+  externalId        String?               // ID in accounting software
+  externalType      String?               // "Invoice", "Bill", "Payment"
+
+  // Sync status
+  synced            Boolean               @default(false)
+  syncedAt          DateTime?
+  syncError         String?
+  syncRetryCount    Int                   @default(0)
+
+  // Related entities
+  propertyId        String?
+  tenantId          String?
+  leaseId           String?
+  billId            String?
+  paymentId         String?
+
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  integration       AccountingIntegration @relation(fields: [integrationId], references: [id])
+  integrationId     String
+
+  @@index([integrationId])
+  @@index([transactionType])
+  @@index([synced])
+  @@index([transactionDate])
+  @@index([propertyId])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+  ADJUSTMENT
+}
